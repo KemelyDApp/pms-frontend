@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=1440, initial-scale=1"/>
+  <title>Kemely PMS — Print</title>
+  <link rel="stylesheet" href="styles/colors_and_type.css"/>
+  <link rel="stylesheet" href="styles/pms.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+  <style>
+    /* Print layout: each page rendered as its own A4-landscape sheet */
+    html, body { background: var(--pms-bg, #0a0a0f); }
+    .print-doc { display: flex; flex-direction: column; gap: 24px; padding: 24px; }
+    .print-sheet {
+      width: 1440px;
+      background: var(--pms-bg, #0a0a0f);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 8px;
+      overflow: hidden;
+      page-break-after: always;
+      break-after: page;
+    }
+    .print-sheet:last-child { page-break-after: auto; break-after: auto; }
+    .print-header {
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--pms-divider, rgba(255,255,255,0.08));
+      display: flex; align-items: center; justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--fg-3, #8a8a99);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .print-header .left { color: var(--fg-1, #fff); font-weight: 700; }
+    .print-body { padding: 18px 22px 26px; }
+    .print-body .pms-page-head { margin-top: 0 !important; }
+
+    @page { size: 1480px 1100px; margin: 0; }
+    @media print {
+      html, body {
+        background: #0a0a0f !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+      .print-doc { padding: 0; gap: 0; }
+      .print-sheet {
+        border: 0;
+        border-radius: 0;
+        margin: 0;
+        box-shadow: none;
+      }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script>
+    const PMS_TWEAKS = { "density": "comfortable", "currency": "USD", "accent": "purple" };
+    window.PMS_TWEAKS_DEFAULTS = PMS_TWEAKS;
+  </script>
+  <script src="data.js"></script>
+  <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="sidebar.jsx"></script>
+  <script type="text/babel" src="page-overview.jsx"></script>
+  <script type="text/babel" src="pages.jsx"></script>
+  <script type="text/babel">
+    // Minimal stub for TweaksPanel/useTweaks (tweaks-panel.jsx not loaded in print mode)
+    function useTweaks(defaults) { return [defaults, () => {}]; }
+    function PrintSheet({ idx, total, label, children }) {
+      return (
+        <section className="print-sheet">
+          <header className="print-header">
+            <span className="left">Kemely PMS · {label}</span>
+            <span>Page {idx} of {total} · Generated 2026-05-12</span>
+          </header>
+          <div className="print-body">{children}</div>
+        </section>
+      );
+    }
+
+    function PrintDoc() {
+      React.useEffect(() => {
+        document.documentElement.setAttribute('data-density', 'comfortable');
+        document.documentElement.setAttribute('data-accent', 'purple');
+      }, []);
+
+      const ccy = 'USD';
+      const pages = [
+        { label: 'Overview',                 el: <OverviewPage ccy={ccy} onOpenPool={()=>{}}/> },
+        { label: 'Positions & exposures',    el: <PositionsPage ccy={ccy}/> },
+        { label: 'Orders & blotter',         el: <BlotterPage/> },
+        { label: 'P&L attribution',          el: <PnlPage/> },
+        { label: 'Pools',                    el: <StrategiesPage onSelect={()=>{}}/> },
+        { label: 'Pool 1 — Market-Neutral',  el: <PoolDetailPage poolId={1} onBack={()=>{}}/> },
+        { label: 'Pool 2 — Cross-Exchange',  el: <PoolDetailPage poolId={2} onBack={()=>{}}/> },
+        { label: 'Pool 3 — Proprietary',     el: <PoolDetailPage poolId={3} onBack={()=>{}}/> },
+        { label: 'Bots & sagas',             el: <BotsPage/> },
+        { label: 'Risk & limits',            el: <RiskPage/> },
+        { label: 'Reconciliation',           el: <ReconPage/> },
+        { label: 'Counterparties',           el: <VenuesPage/> },
+        { label: 'Transfers',                el: <TransfersPage/> },
+        { label: 'Reports',                  el: <ReportsPage/> },
+        { label: 'Admin',                    el: <AdminPage/> },
+      ];
+
+      return (
+        <div className="print-doc">
+          {pages.map((p, i) => (
+            <PrintSheet key={i} idx={i+1} total={pages.length} label={p.label}>
+              {p.el}
+            </PrintSheet>
+          ))}
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<PrintDoc/>);
+
+    // Auto-print once fonts + JSX are ready
+    (async () => {
+      try { await document.fonts.ready; } catch (e) {}
+      // Wait for Babel-transpiled scripts + React render
+      const ready = () => document.querySelectorAll('.print-sheet').length >= 15;
+      let tries = 0;
+      while (!ready() && tries < 60) { await new Promise(r => setTimeout(r, 100)); tries++; }
+      await new Promise(r => setTimeout(r, 500));
+      window.print();
+    })();
+  </script>
+</body>
+</html>

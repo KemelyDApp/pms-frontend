@@ -1,0 +1,241 @@
+/* Kemely Design System — Colors & Type tokens
+ * Source of truth: KemelyDApp/frontend-mono — libs/shared/design-tokens/src/lib/colors.scss
+ *                  apps/frontend_v2/src/styles/theme.scss + App.css
+ */
+
+/* ===========================
+ * FONTS — Montserrat (self-hosted, all 18 styles)
+ * Files live in /fonts/ so paths resolve from anywhere via root-absolute URL.
+ * =========================== */
+@font-face { font-family: 'Montserrat'; font-weight: 100; font-style: normal; font-display: swap; src: url('fonts/Montserrat-Thin.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 100; font-style: italic; font-display: swap; src: url('fonts/Montserrat-ThinItalic.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 200; font-style: normal; font-display: swap; src: url('fonts/Montserrat-ExtraLight.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 200; font-style: italic; font-display: swap; src: url('fonts/Montserrat-ExtraLightItalic.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 300; font-style: normal; font-display: swap; src: url('fonts/Montserrat-Light.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 300; font-style: italic; font-display: swap; src: url('fonts/Montserrat-LightItalic.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 400; font-style: normal; font-display: swap; src: url('fonts/Montserrat-Regular.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 400; font-style: italic; font-display: swap; src: url('fonts/Montserrat-Italic.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 500; font-style: normal; font-display: swap; src: url('fonts/Montserrat-Medium.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 500; font-style: italic; font-display: swap; src: url('fonts/Montserrat-MediumItalic.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 600; font-style: normal; font-display: swap; src: url('fonts/Montserrat-SemiBold.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 600; font-style: italic; font-display: swap; src: url('fonts/Montserrat-SemiBoldItalic.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 700; font-style: normal; font-display: swap; src: url('fonts/Montserrat-Bold.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 700; font-style: italic; font-display: swap; src: url('fonts/Montserrat-BoldItalic.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 800; font-style: normal; font-display: swap; src: url('fonts/Montserrat-ExtraBold.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 800; font-style: italic; font-display: swap; src: url('fonts/Montserrat-ExtraBoldItalic.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 900; font-style: normal; font-display: swap; src: url('fonts/Montserrat-Black.ttf') format('truetype'); }
+@font-face { font-family: 'Montserrat'; font-weight: 900; font-style: italic; font-display: swap; src: url('fonts/Montserrat-BlackItalic.ttf') format('truetype'); }
+
+:root {
+  /* ===========================
+   * BRAND (from theme.scss)
+   * =========================== */
+  --color-brand-purple: #a648ff;
+  --color-brand-red:    #ff474a;
+  --color-brand-orange: #ff822f;
+
+  /* Hero gradient used across CTAs, logo, brand marks */
+  --brand-gradient: linear-gradient(
+    0deg,
+    rgba(135, 15, 255, 1) 0%,
+    rgba(176, 108, 255, 1) 100%
+  );
+  --brand-gradient-pressed: linear-gradient(
+    0deg,
+    rgba(97, 0, 194, 1) 0%,
+    rgba(135, 15, 255, 1) 100%
+  );
+
+  /* ===========================
+   * NEUTRAL (dark-first palette)
+   * =========================== */
+  --neutral-05:  #141414; /* app background */
+  --neutral-10:  #191919;
+  --neutral-15:  #191A22; /* panel / deep surface */
+  --neutral-20:  #27262E;
+  --neutral-50:  #5F5C70; /* muted fg / dividers */
+  --neutral-80:  #ADABBA; /* secondary text */
+  --neutral-90:  #E4E3E8;
+  --neutral-100: #ffffff;
+
+  /* ===========================
+   * ACCENT / CATEGORICAL (additional-*)
+   * =========================== */
+  --additional-red-500:    #ff5357;
+  --additional-orange-500: #ff8d36;
+  --additional-purple-500: #a84aff;
+  --additional-mint-500:   #3bd8a2;
+  --additional-blue-500:   #5367ff;
+  --additional-yellow-500: #ffd300;
+  --additional-gray-500:   #e3e3e3;
+  --additional-sky-500:    #36c2ff;
+  --additional-green-500:  #7ed957;
+  --additional-pink-500:   #ff66c4;
+
+  /* 20% alpha "surface" tints for pills, chips, tag backgrounds */
+  --additional-red-surface:    rgba(255, 83, 87, 0.20);
+  --additional-orange-surface: rgba(255, 141, 54, 0.20);
+  --additional-purple-surface: rgba(168, 74, 255, 0.20);
+  --additional-mint-surface:   rgba(59, 216, 162, 0.20);
+  --additional-blue-surface:   rgba(83, 103, 255, 0.20);
+  --additional-yellow-surface: rgba(255, 211, 0, 0.20);
+  --additional-gray-surface:   rgba(227, 227, 227, 0.20);
+  --additional-sky-surface:    rgba(54, 194, 255, 0.20);
+  --additional-green-surface:  rgba(126, 217, 87, 0.20);
+  --additional-pink-surface:   rgba(255, 102, 196, 0.20);
+
+  /* ===========================
+   * SYSTEM (status)
+   * =========================== */
+  --system-error-500:   #ff7072;
+  --system-success-500: #68da98;
+  --system-warning-500: #ff9b4f;
+  --system-error-surface:   rgba(255, 112, 114, 0.20);
+  --system-success-surface: rgba(104, 218, 152, 0.20);
+  --system-warning-surface: rgba(255, 155, 79, 0.20);
+
+  /* Global notifications (saturated) */
+  --system-notif-success: #6100c2;
+  --system-notif-info:    #4eb5ff;
+  --system-notif-error:   #f81d15;
+  --system-notif-warning: #eebf31;
+
+  /* ===========================
+   * CONTROLS / STATES
+   * =========================== */
+  --controls-gradient-500:  var(--brand-gradient);
+  --controls-gradient-800:  var(--brand-gradient-pressed);
+  --controls-gradient-20:   linear-gradient(180deg, rgba(135,15,255,.2) 0%, rgba(176,108,255,.2) 100%);
+  --controls-basic-500:     #ce66ff;
+  --controls-basic-800:     #6100c2;
+  --controls-focus-ring:    rgba(206, 102, 255, 0.60);
+  --controls-glow:          0 0 180px 0 #5215FF;
+  --controls-glow-pressed:  0 0 180px 0 rgba(82, 21, 255, 0.60);
+
+  /* ===========================
+   * OVERLAY / GLASS
+   * =========================== */
+  --overlay-black-30: rgba(0, 0, 0, 0.30);
+  --overlay-gray-30:  rgba(20, 20, 20, 0.30);
+  --overlay-gray-70:  rgba(20, 20, 20, 0.70); /* footer surface */
+  --overlay-gray-90:  rgba(25, 25, 25, 0.90); /* noise-modal tint */
+  --overlay-black-gradient: linear-gradient(180deg, #000000 0%, #191a23 100%);
+
+  /* ===========================
+   * SEMANTIC ALIASES
+   * =========================== */
+  --bg-app:         var(--neutral-05);
+  --bg-surface:     var(--neutral-15);
+  --bg-surface-2:   var(--neutral-20);
+  --fg-1:           var(--neutral-100);        /* primary text on dark */
+  --fg-2:           var(--neutral-90);
+  --fg-3:           var(--neutral-80);         /* secondary */
+  --fg-muted:       var(--neutral-50);
+  --border-glass:   rgba(255,255,255,0.08);
+
+  /* Risk taxonomy (strategy cards) */
+  --risk-low:      var(--additional-gray-500);     /* #E3E3E3 */
+  --risk-moderate: #B153FF;
+  --risk-high:     #FF8330;
+  --risk-extreme:  var(--additional-red-500);      /* #FF5357 */
+
+  /* ===========================
+   * RADII (observed)
+   * =========================== */
+  --radius-xs:  4px;   /* checkbox */
+  --radius-sm:  12px;  /* focus-visible outline on links */
+  --radius-md:  32px;  /* mobile cards */
+  --radius-lg:  40px;  /* buttons (pill) */
+  --radius-xl:  48px;  /* mobile banner */
+  --radius-2xl: 64px;  /* faq question / banner lg */
+  --radius-3xl: 80px;  /* strategy card, footer top */
+  --radius-4xl: 120px; /* desktop banner */
+  --radius-pill: 100px;
+
+  /* ===========================
+   * SHADOW / GLOW
+   * =========================== */
+  --shadow-card:     0 30px 60px -20px rgba(0,0,0,0.55);
+  --shadow-glow-hv:  0 0 180px 0 #5215FF;   /* primary hover */
+  --shadow-glow-pr:  0 0 180px 0 rgba(82, 21, 255, 0.60);
+  --shadow-glow-cb:  0px 0px 60px 4px #5215FF; /* checkbox hover */
+
+  /* ===========================
+   * BLUR
+   * =========================== */
+  --blur-header: 30px;
+  --blur-panel:  60px;
+  --blur-banner: 30px;
+  --blur-lava:   3.5rem; /* banner backdrop blobs */
+
+  /* ===========================
+   * TYPE — family
+   * =========================== */
+  --main-font: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --mono-font: ui-monospace, 'JetBrains Mono', 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Type scale (observed from codebase, desktop caps) */
+  --fs-display-xl: 96px; /* stat hero / step index */
+  --fs-display-lg: 73px; /* strategy card title */
+  --fs-display-md: 60px; /* banner headline */
+  --fs-h1:         40px; /* section header ("How to start") */
+  --fs-h2:         32px; /* logo title */
+  --fs-h3:         24px; /* FAQ title, step title, stat description */
+  --fs-body-lg:    20px; /* banner description */
+  --fs-body:       18px; /* body, step description */
+  --fs-body-sm:    14px; /* mobile body, footer captions */
+  --fs-caption:    12px;
+
+  --fw-300: 300;
+  --fw-400: 400;
+  --fw-500: 500;
+  --fw-600: 600;
+  --fw-700: 700;
+  --fw-900: 900;
+
+  --lh-tight:  110%;
+  --lh-snug:   130%;
+  --lh-normal: 140%;
+  --lh-loose:  150%;
+}
+
+/* ===========================
+ * SEMANTIC TYPE STYLES
+ * =========================== */
+.ks-display-xl { font: var(--fw-500) var(--fs-display-xl)/1 var(--main-font); letter-spacing: -0.02em; }
+.ks-display-lg { font: var(--fw-500) var(--fs-display-lg)/1 var(--main-font); letter-spacing: -0.01em; }
+.ks-display-md { font: var(--fw-500) var(--fs-display-md)/var(--lh-tight) var(--main-font); }
+.ks-h1 { font: var(--fw-700) var(--fs-h1)/var(--lh-snug) var(--main-font); color: var(--fg-1); }
+.ks-h2 { font: var(--fw-700) var(--fs-h2)/var(--lh-snug) var(--main-font); color: var(--fg-1); }
+.ks-h3 { font: var(--fw-700) var(--fs-h3)/var(--lh-snug) var(--main-font); color: var(--fg-1); }
+.ks-body-lg { font: var(--fw-400) var(--fs-body-lg)/var(--lh-normal) var(--main-font); color: var(--fg-2); }
+.ks-body    { font: var(--fw-400) var(--fs-body)/var(--lh-normal) var(--main-font); color: var(--fg-2); }
+.ks-body-sm { font: var(--fw-400) var(--fs-body-sm)/var(--lh-normal) var(--main-font); color: var(--fg-3); }
+.ks-caption { font: var(--fw-400) var(--fs-caption)/var(--lh-normal) var(--main-font); color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.ks-label   { font: var(--fw-600) var(--fs-body)/1 var(--main-font); }
+.ks-mono    { font-family: var(--mono-font); font-size: var(--fs-body-sm); }
+
+/* ===========================
+ * SHARED PRIMITIVES
+ * =========================== */
+.ks-glass {
+  position: relative;
+  background: rgba(20, 21, 22, 0.20);
+  backdrop-filter: blur(var(--blur-panel));
+  -webkit-backdrop-filter: blur(var(--blur-panel));
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+}
+.ks-glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(105deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.08) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+          mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
