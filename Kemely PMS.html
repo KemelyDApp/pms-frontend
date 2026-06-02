@@ -6,6 +6,7 @@
   <title>Kemely PMS — Portfolio Management System</title>
   <link rel="stylesheet" href="styles/colors_and_type.css"/>
   <link rel="stylesheet" href="styles/pms.css"/>
+  <link rel="stylesheet" href="styles/dashboard.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,10 +26,13 @@
   </script>
   <script src="data.js"></script>
   <script src="data-v2.js"></script>
+  <script src="dashboard-data.js"></script>
   <script type="text/babel" src="components.jsx"></script>
   <script type="text/babel" src="sidebar.jsx"></script>
   <script type="text/babel" src="page-overview.jsx"></script>
   <script type="text/babel" src="page-investor-detail.jsx"></script>
+  <script type="text/babel" src="dashboard-widgets.jsx"></script>
+  <script type="text/babel" src="page-dashboard.jsx"></script>
   <script type="text/babel" src="pages.jsx"></script>
   <script type="text/babel" src="pages-v2.jsx"></script>
   <script type="text/babel" src="tweaks-panel.jsx"></script>
@@ -46,7 +50,7 @@
 
       const labels = {
         overview:'Overview', positions:'Positions', blotter:'Orders & blotter',
-        pnl:'P&L attribution', firm:'Firm PnL', strategies:'Strategies', bots:'Bots & sagas',
+        pnl:'P&L attribution', firm:'Firm P&L', strategies:'Strategies', bots:'Bots & sagas',
         fundflow:'Fund flow', investors:'Investors',
         risk:'Risk & limits', recon:'Reconciliation', venues:'Counterparties',
         transfers:'Transfers', reports:'Reports', admin:'Admin'
@@ -56,7 +60,7 @@
       const openPool = (id) => { setActive('strategies'); setPoolId(id); };
 
       const pageMap = {
-        overview: <OverviewPage ccy={ccy} onOpenPool={openPool}/>,
+        overview: <DashboardPage ccy={ccy} onOpenPool={openPool}/>,
         positions: <PositionsPage ccy={ccy}/>,
         blotter: <BlotterPage/>,
         pnl: <PnlPage/>,

@@ -6,7 +6,7 @@ const NAV = [
     { id: "positions",  label: "Positions",       icon: "stack" },
     { id: "blotter",    label: "Orders & blotter",icon: "list", badge: { v: "LIVE", kind: "info" } },
     { id: "pnl",        label: "P&L attribution", icon: "trend" },
-    { id: "firm",       label: "Firm PnL",        icon: "coin" },
+    { id: "firm",       label: "Firm P&L",        icon: "coin" },
   ]},
   { group: "Strategies", items: [
     { id: "strategies", label: "Strategies",      icon: "layers" },

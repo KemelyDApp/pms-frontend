@@ -369,7 +369,7 @@ function FirmPnlPage() {
   return (
     <>
       <div className="pms-page-head">
-        <div><h1>Firm PnL</h1><div className="sub">Where your fees, rebates, funding and undeployed cash live</div></div>
+        <div><h1>Firm P&amp;L</h1><div className="sub">Where your fees, rebates, funding and undeployed cash live</div></div>
         <div className="pms-page-actions"><button className="pms-btn ghost">Export</button><button className="pms-btn primary">Sweep to treasury</button></div>
       </div>
       <PageMeta src="fee-engine · treasury · earn-providers" refresh="hourly · sweep-on-distribute" role="PM · ADMIN · COMPLIANCE"/>

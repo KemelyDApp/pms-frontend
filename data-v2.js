@@ -183,7 +183,41 @@ const TRANSFERS_RECENT = [
   { id:"TXR-04815", from:"Hot Wallet",       to:"External 0x91..2d",  asset:"USDT", chain:"TRON",     amount: 240_000, sig:"2-of-2", settled:"08:42:31", duration:"failed @ confirm", status:"failed" },
 ];
 
+// ── Reconciliation findings (mirrors the real reconciler admin panel) ──────────
+// Detect & alert only — never auto-corrects. 5 reconcilers: balance, intent, fee, lock, hot_wallet.
+// severity: 'FAIL' (drift / invariant broken) or 'INFO' (heartbeat / all-clear).
+const RECON_RECONCILERS = [
+  { key:'balance',    label:'Balance',    every:'5m', findings:1, note:'1 FAIL unresolved' },
+  { key:'intent',     label:'Intent',     every:'2m', findings:0, note:'all clear' },
+  { key:'fee',        label:'Fee',        every:'15m',findings:0, note:'all clear' },
+  { key:'lock',       label:'Lock',       every:'1m', findings:0, note:'all clear' },
+  { key:'hot_wallet', label:'Hot Wallet', every:'5m', findings:0, note:'all clear' },
+];
+const RECON_FINDINGS = [
+  { id:'RC-3493', finding_no:61517, when:'2026-06-02 09:41:13', severity:'FAIL', reconciler:'balance', pool:1, title:'Balance DRIFT (books > wallet — money missing) on pool 1 / Binance', code:'balance:pool:1:Binance:USDT', backend:99.7894, external:6.6427, delta:93.1466, resolution:null,
+    detail:{ wallets:{ SPOT:'4.11786456', USDT_FUTURE:'2.52490430' }, sub_account_email:'candlehunter1_virtual@l11o6g4znoemail.com', bot_position_locked:'0', provider_locked_estimate:'0' } },
+  { id:'RC-3492', finding_no:61516, when:'2026-06-02 09:41:13', severity:'INFO', reconciler:'balance', pool:3, title:'Balance OK on pool 3 / OKX', code:'balance:pool:3:OKX:USDT', backend:0, external:0, delta:0, resolution:null },
+  { id:'RC-3491', finding_no:61515, when:'2026-06-02 09:41:13', severity:'INFO', reconciler:'lock', pool:null, title:'Lock invariants OK', code:'lock:heartbeat:ok', backend:0, external:0, delta:0, resolution:null },
+  { id:'RC-3490', finding_no:61514, when:'2026-06-02 09:41:13', severity:'INFO', reconciler:'hot_wallet', pool:null, title:'No hot wallets registered', code:'hot_wallet:no_wallets', backend:0, external:0, delta:0, resolution:null },
+  { id:'RC-3489', finding_no:61513, when:'2026-06-02 09:42:13', severity:'INFO', reconciler:'intent', pool:null, title:'Intent invariants OK', code:'intent:heartbeat:ok', backend:0, external:0, delta:0, resolution:null },
+  { id:'RC-3488', finding_no:61512, when:'2026-06-02 09:42:13', severity:'INFO', reconciler:'lock', pool:null, title:'Lock invariants OK', code:'lock:heartbeat:ok', backend:0, external:0, delta:0, resolution:null },
+  { id:'RC-3487', finding_no:61511, when:'2026-06-02 09:43:13', severity:'INFO', reconciler:'lock', pool:null, title:'Lock invariants OK', code:'lock:heartbeat:ok', backend:0, external:0, delta:0, resolution:null },
+  { id:'RC-3486', finding_no:61510, when:'2026-06-02 09:44:13', severity:'INFO', reconciler:'intent', pool:null, title:'Intent invariants OK', code:'intent:heartbeat:ok', backend:0, external:0, delta:0, resolution:null },
+  { id:'RC-3402', finding_no:61404, when:'2026-06-02 08:12:01', severity:'FAIL', reconciler:'fee', pool:2, title:'Fee accrual mismatch on pool 2 / Bybit', code:'fee:pool:2:Bybit:USDT', backend:1420.50, external:1418.20, delta:2.30, resolution:'retry queued',
+    detail:{ accrued_books:'1420.50', accrued_venue:'1418.20', last_sweep:'2026-06-01 23:55 UTC', bot_position_locked:'0' } },
+];
+
+// Privileged-action audit events (24h) — anomalies & failures flagged.
+const PRIVILEGED_ACTIONS_24H = { count: 38, prev: 24, anomalies: 2 };
+const PRIVILEGED_EVENTS = [
+  { t:'2026-06-02 09:18:42', actor:'ops-emily',    role:'OPS',   action:'transfer.approve',     target:'TXR-04830', result:'ok',     flag:'anomaly', note:'6th approval in 1h (avg 2)' },
+  { t:'2026-06-02 08:54:11', actor:'system',       role:'SYSTEM',action:'api_key.auth_failed',  target:'key-04826', result:'failed', flag:'failed',  note:'Expired key used · Deribit' },
+  { t:'2026-06-02 08:42:08', actor:'prop-bot-01',  role:'BOT',   action:'bot.kill_switch',      target:'prop-bot-01',result:'ok',    flag:'anomaly', note:'Manual kill outside schedule' },
+  { t:'2026-06-02 07:12:33', actor:'marcus-holm',  role:'PM',    action:'fee_policy.edit',      target:'pool 2',    result:'failed', flag:'failed',  note:'Rejected — perf > 30% cap' },
+];
+
 Object.assign(window, {
+  RECON_RECONCILERS, RECON_FINDINGS, PRIVILEGED_ACTIONS_24H, PRIVILEGED_EVENTS,
   ROLES, ROLE_LABEL,
   DEPOSIT_STAGES, WITHDRAW_STAGES, FUND_INTENTS, DEPOSIT_FLOWS, WITHDRAW_FLOWS,
   INVESTORS, INVESTOR_LOTS,
