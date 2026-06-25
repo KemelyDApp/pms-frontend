@@ -1,38 +1,24 @@
 /* Main Dashboard — situational-awareness surface (per spec).
    Stats only. No action buttons. 4 sections: Critical Ops · Monitoring · Management · Admin. */
 
-function DashboardPage({ ccy, onOpenPool }) {
+function DashboardPage({ ccy, onOpenPool, onNav }) {
   const [span, setSpan] = React.useState('7d');
   const [compare, setCompare] = React.useState(false);
-  const [lastUpdated, setLastUpdated] = React.useState('14:32 UTC');
-  const [nonce, setNonce] = React.useState(0);
-  const m = React.useMemo(() => window.dashMetricsFor(span), [span, nonce]);
-
-  const refresh = () => {
-    const d = new Date();
-    setLastUpdated(`${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')} UTC`);
-    setNonce(n => n + 1);
-  };
-
-  // section anchors
-  const refs = { ops: React.useRef(null), monitor: React.useRef(null), manage: React.useRef(null), admin: React.useRef(null) };
-  const [activeSec, setActiveSec] = React.useState('ops');
-  const jump = (id) => {
-    const el = refs[id]?.current;
-    if (el) window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY - 96, behavior: 'smooth' });
-  };
+  // Live, WebSocket-driven timestamp (no manual refresh). Ticks every 5s.
+  const [lastUpdated, setLastUpdated] = React.useState(() => new Date().toISOString().slice(11, 19) + ' UTC');
   React.useEffect(() => {
-    const onScroll = () => {
-      let cur = 'ops';
-      for (const id of Object.keys(refs)) {
-        const el = refs[id]?.current;
-        if (el && el.getBoundingClientRect().top - 130 <= 0) cur = id;
-      }
-      setActiveSec(cur);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
+    const t = setInterval(() => setLastUpdated(new Date().toISOString().slice(11, 19) + ' UTC'), 5000);
+    return () => clearInterval(t);
   }, []);
+  const m = React.useMemo(() => window.dashMetricsFor(span), [span]);
+
+  // Section tabs (replaces long-scroll + anchor nav)
+  const TABS = [['ops', 'Critical Ops'], ['monitor', 'Monitoring'], ['manage', 'Management'], ['admin', 'Admin']];
+  const [tab, setTab] = React.useState(() => {
+    const h = (window.location.hash || '').replace('#dash-', '');
+    return TABS.some(t => t[0] === h) ? h : 'ops';
+  });
+  const selectTab = (id) => { setTab(id); history.replaceState(null, '', '#dash-' + id); window.scrollTo({ top: 0, behavior: 'smooth' }); };
 
   // ─── Table column defs ───
   // Short crypto wallet address per intent (deterministic from id + chain).
@@ -86,27 +72,28 @@ function DashboardPage({ ccy, onOpenPool }) {
           <div className="sub">Situational awareness · 3 strategies · {(window.POOLS || []).length} bots · 6 venues · {(window.INVESTORS || []).length} investors</div>
         </div>
         <div className="dash-secnav">
-          {[['ops', 'Critical Ops'], ['monitor', 'Monitoring'], ['manage', 'Management'], ['admin', 'Admin']].map(([id, lbl]) => (
-            <button key={id} className={activeSec === id ? 'active' : ''} onClick={() => jump(id)}>{lbl}</button>
+          {TABS.map(([id, lbl]) => (
+            <button key={id} className={tab === id ? 'active' : ''} onClick={() => selectTab(id)}>{lbl}</button>
           ))}
         </div>
       </div>
 
-      <DashControls span={span} setSpan={setSpan} compare={compare} setCompare={setCompare} lastUpdated={lastUpdated} onRefresh={refresh}/>
+      <DashControls span={span} setSpan={setSpan} compare={compare} setCompare={setCompare} lastUpdated={lastUpdated}/>
 
       {/* ═══════════ SECTION 1 — CRITICAL OPS ═══════════ */}
-      <DashSection id="ops" num="01" title="Critical Ops" purpose="Conditions that could cause financial loss, compliance failure, or investor harm" tone="crit" anchorRef={refs.ops}>
+      {tab === 'ops' && (
+      <DashSection id="ops" num="01" title="Critical Ops" purpose="Conditions that could cause financial loss, compliance failure, or investor harm" tone="crit">
         <DashRow>
           <StatWidget label="Strategies in drawdown alert" metric={m.strategiesInDd} format="num"
             desc={`Firm drawdown limit ${m.ddLimitLabel}`} good="down" critical span={span} compareOn={compare}/>
           <StatWidget label="Bot errors (last 1h)" metric={m.botErrors1h} format="num" unit="abs"
             desc="Across all bots · prior 60-min window" good="down" critical span="1h" compareOn={compare}/>
           <div className="col2"><BarWidgetH label="Errors by type" data={m.botErrorsByType} compareOn={compare} span="1h"
-            desc="Last 60 minutes · click a bar to filter" onBar={() => {}}/></div>
+            desc="Last 60 minutes" onBar={null}/></div>
         </DashRow>
 
         <DashRow>
-          <TableWidget label="Pending withdrawals" span={span} sortNote="age ↓" desc="Top 6 awaiting approval"
+          <TableWidget label="Pending withdrawals" span={span} action={{ label: 'Review in Transfers', onClick: () => onNav && onNav('transfers') }} desc="Top 6 awaiting approval"
             columns={[
               { label: 'Investor', render: r => <span className="pms-mono text-xs">{r.user}</span> },
               { label: 'Amount', num: true, render: r => <span className="strong">{fmt.usd(r.amount, { compact: true })}</span> },
@@ -117,7 +104,7 @@ function DashboardPage({ ccy, onOpenPool }) {
               { label: 'Age', render: r => <span className="pms-mono text-xs muted">{r.age}</span> },
             ]}
             rows={withdrawalRows}/>
-          <TableWidget label="Transfers pending approval" span={span} sortNote="risk ↓ then age ↓" desc="Top 6 awaiting approval"
+          <TableWidget label="Transfers pending approval" span={span} action={{ label: 'Open Transfers', onClick: () => onNav && onNav('transfers') }} desc="Top 6 awaiting approval"
             columns={[
               { label: 'Transfer ID', render: r => <span className="pms-mono text-xs">{r.id}</span> },
               { label: 'From', render: r => <span className="text-xs">{r.from}</span> },
@@ -129,7 +116,7 @@ function DashboardPage({ ccy, onOpenPool }) {
         </DashRow>
 
         <DashFull>
-          <TableWidget label="Reconciliation findings" span={span} sortNote="FAIL first · then newest" desc="Continuous audit of internal ledger vs external sources (XBridge, transfer-service, on-chain). Detect & alert only — never auto-corrects."
+          <TableWidget label="Reconciliation findings" span={span} action={{ label: 'Open Reconciliation', onClick: () => onNav && onNav('recon') }} desc="Continuous audit of internal ledger vs external sources (XBridge, transfer-service, on-chain). Detect & alert only — never auto-corrects."
             columns={[
               { label: 'When', render: r => <span className="pms-mono text-xs muted">{r.when.slice(11)}</span> },
               { label: 'Severity', render: r => <span className={`pms-pill ${r.severity === 'FAIL' ? 'neg' : 'info'}`}>{r.severity}</span> },
@@ -151,9 +138,11 @@ function DashboardPage({ ccy, onOpenPool }) {
             rows={reconRows}/>
         </DashFull>
       </DashSection>
+      )}
 
       {/* ═══════════ SECTION 2 — MONITORING ═══════════ */}
-      <DashSection id="monitor" num="02" title="Monitoring" purpose="Real-time read of firm trading health · no action implied" anchorRef={refs.monitor}>
+      {tab === 'monitor' && (
+      <DashSection id="monitor" num="02" title="Monitoring" purpose="Real-time read of firm trading health · no action implied">
         <DashCap>Headline</DashCap>
         <DashStrip>
           <StatWidget label="Total AUM" metric={m.totalAum} format="usd" good="up" span={span} compareOn={compare} desc="Assets under management"/>
@@ -178,7 +167,7 @@ function DashboardPage({ ccy, onOpenPool }) {
           <DonutWidget label="P&L by destination" segments={m.pnlDest} compareOn={compare} span={span}
             desc="Where this period's gross P&L flows"/>
           <div className="col2"><BarWidgetH label="Trades per strategy" data={m.tradesPerStrategy} compareOn={compare} span={span}
-            desc="Click a bar to filter" onBar={() => {}}/></div>
+            desc="Executed trades per strategy" onBar={null}/></div>
         </DashRow>
 
         <DashFull>
@@ -197,16 +186,18 @@ function DashboardPage({ ccy, onOpenPool }) {
         </DashFull>
 
         <DashFull>
-          <TableWidget label="Top positions" span={span} sortNote="by notional ↓" desc="Top 6 open positions"
+          <TableWidget label="Recently closed positions" span={span} action={{ label: 'Open Positions', onClick: () => onNav && onNav('positions') }} desc="Bots hold positions briefly — most recently closed roundtrips"
             columns={[
+              { label: 'Closed', render: r => <span className="pms-mono text-xs muted">{r.closed}</span> },
               { label: 'Asset', render: r => <AssetChip sym={r.sym}/> },
               { label: 'Venue', render: r => <VenueChip name={r.venue}/> },
               { label: 'Side', render: r => <span className={`pms-side ${r.side === 'long' ? 'buy' : 'sell'}`}>{r.side.toUpperCase()}</span> },
-              { label: 'Notional', num: true, render: r => <span className="strong">{fmt.usd(Math.abs(r.notional), { compact: true })}</span> },
-              { label: 'Unrealized P&L', num: true, render: r => <span className={classDelta(r.upnl) + ' strong'}>{fmt.signedUsd(r.upnl, { compact: true })}</span> },
-              { label: 'P&L %', num: true, render: r => <span className={classDelta(r.upnl_pct)}>{r.upnl_pct >= 0 ? '+' : ''}{r.upnl_pct.toFixed(2)}%</span> },
+              { label: 'Notional', num: true, render: r => <span className="strong">{fmt.usd(r.notional, { compact: true })}</span> },
+              { label: 'Realized P&L', num: true, render: r => <span className={classDelta(r.pnl) + ' strong'}>{fmt.signedUsd(r.pnl, { compact: true })}</span> },
+              { label: 'P&L %', num: true, render: r => <span className={classDelta(r.pnl_pct)}>{r.pnl_pct >= 0 ? '+' : ''}{r.pnl_pct.toFixed(2)}%</span> },
+              { label: 'Held', render: r => <span className="pms-mono text-xs muted">{r.held}</span> },
             ]}
-            rows={m.topPositions}/>
+            rows={m.closedPositions}/>
         </DashFull>
 
         <DashCap>Fund flow pipeline</DashCap>
@@ -222,7 +213,7 @@ function DashboardPage({ ccy, onOpenPool }) {
         <DashRow>
           <StatWidget label="Venues degraded or down" metric={m.venuesDegraded} format="num" good="down" critical span={span} compareOn={compare} desc="Not in healthy status"/>
           <div className="col2"><BarWidgetH label="Margin utilization per venue" data={m.marginPerVenue} compareOn={compare} span={span} format="pct"
-            desc="Margin used % of available · click to filter" onBar={() => {}}/></div>
+            desc="Margin used % of available" onBar={null}/></div>
         </DashRow>
         <DashFull>
           <TableWidget label="Venue status summary" span={span} sortNote="margin utilization ↓" desc="One row per venue"
@@ -237,9 +228,11 @@ function DashboardPage({ ccy, onOpenPool }) {
             rows={[...(window.VENUES || [])].filter(v => v.type === 'CEX').sort((a, b) => b.margin - a.margin)}/>
         </DashFull>
       </DashSection>
+      )}
 
       {/* ═══════════ SECTION 3 — MANAGEMENT ═══════════ */}
-      <DashSection id="manage" num="03" title="Management" purpose="Investor relationships, fee earnings, and operational sagas · consulted daily" anchorRef={refs.manage}>
+      {tab === 'manage' && (
+      <DashSection id="manage" num="03" title="Management" purpose="Investor relationships, fee earnings, and operational sagas · consulted daily">
         <DashCap>Investors & revenue</DashCap>
         <DashStrip>
           <StatWidget label="Total investors" metric={m.totalInvestors} format="num" good="up" span={span} compareOn={compare} desc="Active investors"/>
@@ -256,7 +249,7 @@ function DashboardPage({ ccy, onOpenPool }) {
           <DonutWidget label="Revenue by type" segments={m.revenueByType} compareOn={compare} span={span}
             desc="YTD firm revenue breakdown"/>
           <div className="col2"><BarWidgetH label="Active sagas by type" data={m.sagasByType} compareOn={compare} span={span}
-            desc="Click a bar to filter" onBar={() => {}}/></div>
+            desc="Running sagas grouped by type" onBar={null}/></div>
         </DashRow>
 
         <DashCap>Fee crystallizations & sagas</DashCap>
@@ -279,9 +272,11 @@ function DashboardPage({ ccy, onOpenPool }) {
             rows={m.crystalSchedule}/>
         </DashFull>
       </DashSection>
+      )}
 
       {/* ═══════════ SECTION 4 — ADMIN ═══════════ */}
-      <DashSection id="admin" num="04" title="Admin" purpose="System hygiene, access, and compliance · consulted weekly or on-demand" anchorRef={refs.admin}>
+      {tab === 'admin' && (
+      <DashSection id="admin" num="04" title="Admin" purpose="System hygiene, access, and compliance · consulted weekly or on-demand">
         <DashStrip>
           <StatWidget label="Keys requiring attention" metric={m.keysAttention} format="num" good="down" critical span={span} compareOn={compare} desc="Needs rotation or expired"/>
           <StatWidget label="Reports ready" metric={m.reportsReady} format="num" good="up" span={span} compareOn={compare} desc="Generated & available for download"/>
@@ -296,8 +291,8 @@ function DashboardPage({ ccy, onOpenPool }) {
             format="num" unit="abs" good="neutral" span="24h" compareOn={compare}
             desc={`${pa.anomalies} flagged as unusual · ${privEvents.filter(e => e.flag === 'failed').length} failed`}/>
           <div className="col2">
-            <TableWidget label="Unusual & failed audit events" span="24h" sortNote="flagged only" desc="Anomalous or failed privileged actions — full log on Admin → Audit"
-              onRow={() => onOpenPool && null}
+            <TableWidget label="Unusual & failed audit events" span="24h" action={{ label: 'Open Audit log', onClick: () => onNav && onNav('admin') }} desc="Anomalous or failed privileged actions — full log on Admin → Audit"
+              onRow={() => onNav && onNav('admin')}
               columns={[
                 { label: 'Time', render: r => <span className="pms-mono text-xs muted">{r.t.slice(11)}</span> },
                 { label: 'Actor', render: r => <span className="pms-mono text-xs">{r.actor}</span> },
@@ -310,6 +305,7 @@ function DashboardPage({ ccy, onOpenPool }) {
           </div>
         </DashRow>
       </DashSection>
+      )}
 
       {/* Reconciliation finding — Inspect / Resolve modal */}
       <Modal open={!!inspectFinding} title={inspectFinding ? `Finding #${inspectFinding.finding_no}` : ''} onClose={() => setInspectFinding(null)}>

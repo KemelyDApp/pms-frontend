@@ -99,7 +99,18 @@ function Sidebar({ active, onNav, collapsed }) {
   );
 }
 
-function TopBar({ crumbs, ccy, setCcy, onToggleSidebar }) {
+function TopBar({ crumbs, ccy, setCcy, onToggleSidebar, onNav }) {
+  const [notifOpen, setNotifOpen] = React.useState(false);
+  const NOTIFS = [
+    { id:'n1', cat:'critical', icon:'⚠', title:'Drawdown limit breach', body:'prop-bot-01 at −4.18% / −5.00% cap · strategy paused', time:'2m ago', nav:'risk' },
+    { id:'n2', cat:'action',   icon:'✋', title:'Withdrawal needs approval', body:'INV-1842 · $124K USDC · audit passed', time:'4m ago', nav:'transfers' },
+    { id:'n3', cat:'critical', icon:'⚠', title:'Reconciliation FAIL', body:'Balance drift pool 1 / Binance · 93.15 USDT missing', time:'6m ago', nav:'recon' },
+    { id:'n4', cat:'action',   icon:'✋', title:'Transfer 2-of-2 signature', body:'TXR-04830 · $1.24M to cold storage', time:'12m ago', nav:'transfers' },
+    { id:'n5', cat:'system',   icon:'●', title:'Connector degraded', body:'Deribit feed lag 18s · failover armed', time:'18m ago', nav:'venues' },
+    { id:'n6', cat:'system',   icon:'●', title:'API key expiring', body:'Deribit master key expired · rotate now', time:'1h ago', nav:'admin' },
+  ];
+  const counts = { critical: NOTIFS.filter(n=>n.cat==='critical').length, action: NOTIFS.filter(n=>n.cat==='action').length };
+  const go = (n) => { setNotifOpen(false); onNav && onNav(n.nav); };
   return (
     <header className="pms-topbar">
       <div className="pms-crumbs">
@@ -109,27 +120,58 @@ function TopBar({ crumbs, ccy, setCcy, onToggleSidebar }) {
       </div>
       <div className="pms-search">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-        Search positions, orders, clients…
+        Search positions, orders, investors…
         <kbd>⌘K</kbd>
       </div>
       <div className="spacer"></div>
       <div className="pms-topbar-right">
-        <div className="pms-pill-status">
+        <div className="pms-pill-status" title="Streaming over WebSocket">
           <span className="dot"></span>
-          All systems · {NOW.toISOString().slice(11,16)} UTC
+          Live · streaming
         </div>
         <div className="pms-seg" role="tablist" aria-label="Currency">
           {['USD','USDC','BTC'].map(c => (
             <button key={c} className={ccy===c?'active':''} onClick={()=>setCcy(c)}>{c}</button>
           ))}
         </div>
-        <button className="pms-icon-btn" title="Notifications">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 11V7a5 5 0 0110 0v4l1.5 2H1.5L3 11zM6 14a2 2 0 004 0"/></svg>
-          <span className="pms-dot"></span>
-        </button>
-        <button className="pms-icon-btn" title="Refresh">
-          <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M14 2v4h-4M2 14v-4h4"/><path d="M3.5 6a5 5 0 018.5-1.5L14 6M2 10l2 1.5A5 5 0 0012.5 10"/></svg>
-        </button>
+        <div className="pms-notif-wrap">
+          <button className={`pms-icon-btn ${notifOpen?'active':''}`} title="Notifications" onClick={()=>setNotifOpen(o=>!o)}>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 11V7a5 5 0 0110 0v4l1.5 2H1.5L3 11zM6 14a2 2 0 004 0"/></svg>
+            <span className="pms-dot"></span>
+          </button>
+          {notifOpen && (
+            <>
+              <div className="pms-notif-scrim" onClick={()=>setNotifOpen(false)}></div>
+              <div className="pms-notif-panel">
+                <div className="pms-notif-head">
+                  <span className="t">Notifications</span>
+                  <span className="pms-notif-summary">
+                    <span className="chip crit">{counts.critical} critical</span>
+                    <span className="chip act">{counts.action} need action</span>
+                  </span>
+                  <button className="pms-notif-clear">Mark all read</button>
+                </div>
+                <div className="pms-notif-list">
+                  {NOTIFS.map(n => (
+                    <div key={n.id} className={`pms-notif-item ${n.cat}`} onClick={()=>go(n)}>
+                      <span className="ic">{n.icon}</span>
+                      <div className="bd">
+                        <div className="ti">{n.title}</div>
+                        <div className="bo">{n.body}</div>
+                        <div className="me">{n.time}</div>
+                      </div>
+                      <span className="go">→</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="pms-notif-foot">
+                  <button onClick={()=>{ setNotifOpen(false); onNav && onNav('admin'); }}>Notification settings</button>
+                  <button className="primary" onClick={()=>{ setNotifOpen(false); onNav && onNav('risk'); }}>View all events</button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </header>
   );

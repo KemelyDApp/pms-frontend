@@ -216,8 +216,20 @@ const PRIVILEGED_EVENTS = [
   { t:'2026-06-02 07:12:33', actor:'marcus-holm',  role:'PM',    action:'fee_policy.edit',      target:'pool 2',    result:'failed', flag:'failed',  note:'Rejected — perf > 30% cap' },
 ];
 
+// ── Recently closed positions (bots hold briefly → closed roundtrips are the signal) ──
+const CLOSED_POSITIONS = [
+  { closed:'09:41:18', sym:'BTC', venue:'Binance', side:'long',  strat:1, notional: 284_000, pnl:  842, pnl_pct: 0.30, held:'2m 18s' },
+  { closed:'09:38:42', sym:'ETH', venue:'OKX',     side:'short', strat:2, notional: 412_000, pnl: 1_284, pnl_pct: 0.31, held:'4m 42s' },
+  { closed:'09:34:08', sym:'SOL', venue:'Bybit',   side:'long',  strat:3, notional: 168_000, pnl: -624, pnl_pct: -0.37, held:'1m 48s' },
+  { closed:'09:28:42', sym:'BTC', venue:'Deribit', side:'long',  strat:1, notional: 240_000, pnl:  318, pnl_pct: 0.13, held:'8m 14s' },
+  { closed:'09:24:12', sym:'ETH', venue:'Binance', side:'long',  strat:2, notional: 184_000, pnl:  942, pnl_pct: 0.51, held:'3m 28s' },
+  { closed:'09:18:18', sym:'AVAX',venue:'OKX',     side:'short', strat:3, notional: 320_000, pnl: 2_140, pnl_pct: 0.67, held:'2m 42s' },
+  { closed:'09:12:14', sym:'SOL', venue:'Bybit',   side:'long',  strat:3, notional: 184_000, pnl: -210, pnl_pct: -0.11, held:'12m 18s' },
+  { closed:'09:08:02', sym:'BTC', venue:'Binance', side:'short', strat:1, notional: 240_000, pnl:  184, pnl_pct: 0.08, held:'5m 04s' },
+];
+
 Object.assign(window, {
-  RECON_RECONCILERS, RECON_FINDINGS, PRIVILEGED_ACTIONS_24H, PRIVILEGED_EVENTS,
+  RECON_RECONCILERS, RECON_FINDINGS, PRIVILEGED_ACTIONS_24H, PRIVILEGED_EVENTS, CLOSED_POSITIONS,
   ROLES, ROLE_LABEL,
   DEPOSIT_STAGES, WITHDRAW_STAGES, FUND_INTENTS, DEPOSIT_FLOWS, WITHDRAW_FLOWS,
   INVESTORS, INVESTOR_LOTS,

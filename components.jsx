@@ -287,8 +287,54 @@ function ccyFmt(usd, ccy) {
   return fmt.usd(usd, { compact: usd >= 1e6 });
 }
 
+// Unified filter dropdown (status / venue / asset) with icon
+const FILTER_ICONS = {
+  status: <><circle cx="8" cy="8" r="6"/><path d="M5.5 8.5l1.8 1.8L10.8 6"/></>,
+  venue:  <><rect x="2.5" y="3" width="11" height="10" rx="1"/><path d="M5 6h2M9 6h2M5 9h2M9 9h2"/></>,
+  asset:  <><circle cx="8" cy="8" r="6"/><path d="M8 4.5v7M9.8 6c-.5-.5-1.2-.7-2-.7-1.2 0-2 .6-2 1.4S6.6 8 7.8 8.2s2 .6 2 1.4-.9 1.4-2 1.4c-.8 0-1.5-.2-2-.7"/></>,
+};
+function FilterDropdown({ icon, label, value, options, onChange }) {
+  const [open, setOpen] = React.useState(false);
+  const [val, setVal] = React.useState(value);
+  const cur = options.find(o => o.v === val) || options[0];
+  const pick = (v) => { setVal(v); setOpen(false); onChange && onChange(v); };
+  return (
+    <div className="pms-fdrop">
+      <button className={`pms-fdrop-btn ${val !== options[0].v ? 'active' : ''}`} onClick={() => setOpen(o => !o)}>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">{FILTER_ICONS[icon]}</svg>
+        <span className="lbl">{label}:</span>
+        <span className="val">{cur.l}</span>
+        <svg className="caret" width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M2 4l3 3 3-3"/></svg>
+      </button>
+      {open && <>
+        <div className="pms-fdrop-scrim" onClick={() => setOpen(false)}></div>
+        <div className="pms-fdrop-menu">
+          {options.map(o => (
+            <button key={o.v} className={`pms-fdrop-opt ${o.v === val ? 'sel' : ''}`} onClick={() => pick(o.v)}>
+              {o.l}{o.v === val && <span className="ck">✓</span>}
+            </button>
+          ))}
+        </div>
+      </>}
+    </div>
+  );
+}
+
+// Unified filter toggle (switch) for boolean options
+function FilterToggle({ label, checked, onChange }) {
+  const [on, setOn] = React.useState(!!checked);
+  const toggle = () => { const n = !on; setOn(n); onChange && onChange(n); };
+  return (
+    <button className={`pms-ftoggle ${on ? 'on' : ''}`} onClick={toggle} role="switch" aria-checked={on}>
+      <span className="track"><span className="knob"></span></span>
+      <span className="lbl">{label}</span>
+    </button>
+  );
+}
+
 Object.assign(window, {
   fmt, classDelta, Delta, RiskPill, VenueChip, AssetChip,
   BotStatusDot, MiniBar, Sparkline, gensSpark, LineChart, Donut,
   SortableTable, Modal, ccyAdjust, ccyFmt, CCY_RATES,
+  FilterDropdown, FilterToggle,
 });

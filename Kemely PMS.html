@@ -60,7 +60,7 @@
       const openPool = (id) => { setActive('strategies'); setPoolId(id); };
 
       const pageMap = {
-        overview: <DashboardPage ccy={ccy} onOpenPool={openPool}/>,
+        overview: <DashboardPage ccy={ccy} onOpenPool={openPool} onNav={goTo}/>,
         positions: <PositionsPage ccy={ccy}/>,
         blotter: <BlotterPage/>,
         pnl: <PnlPage/>,
@@ -82,7 +82,7 @@
       return (
         <div className="pms-app" data-screen-label={crumbLabel}>
           <Sidebar active={active} onNav={goTo}/>
-          <TopBar crumbs={['Kemely PMS', crumbLabel]} ccy={ccy} setCcy={(c)=>setTweak('currency', c)}/>
+          <TopBar crumbs={['Kemely PMS', crumbLabel]} ccy={ccy} setCcy={(c)=>setTweak('currency', c)} onNav={goTo}/>
           <main className="pms-main">
             <div className="pms-page">
               {pageMap[active]}

@@ -231,6 +231,64 @@ html, body {
   background: var(--pms-neg);
   box-shadow: 0 0 8px var(--pms-neg);
 }
+.pms-icon-btn.active { background: rgba(176,108,255,0.14); color: var(--pms-accent); border-color: rgba(176,108,255,0.30); }
+
+/* ───────────── Notification Center ───────────── */
+.pms-notif-wrap { position: relative; }
+.pms-notif-scrim { position: fixed; inset: 0; z-index: 40; }
+.pms-notif-panel {
+  position: absolute; top: calc(100% + 10px); right: 0; z-index: 41;
+  width: 380px; max-height: 70vh; display: flex; flex-direction: column;
+  background: var(--pms-panel-2, #1B1C26);
+  border: 1px solid var(--pms-divider-strong);
+  border-radius: 12px;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.55);
+  overflow: hidden;
+}
+.pms-notif-head {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 12px 14px; border-bottom: 1px solid var(--pms-divider);
+}
+.pms-notif-head .t { font-size: 13px; font-weight: 700; color: var(--fg-1); }
+.pms-notif-summary { display: inline-flex; gap: 6px; }
+.pms-notif-summary .chip { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 10px; }
+.pms-notif-summary .chip.crit { color: var(--pms-neg); background: rgba(255,112,114,0.12); }
+.pms-notif-summary .chip.act { color: var(--pms-warn); background: rgba(255,155,79,0.12); }
+.pms-notif-clear { margin-left: auto; background: none; border: 0; color: var(--fg-3); font-size: 11px; cursor: pointer; font-family: inherit; }
+.pms-notif-clear:hover { color: var(--fg-1); }
+.pms-notif-list { overflow-y: auto; flex: 1; }
+.pms-notif-item {
+  display: flex; gap: 11px; align-items: flex-start;
+  padding: 11px 14px; border-bottom: 1px solid var(--pms-divider);
+  cursor: pointer; position: relative;
+  transition: background 0.1s;
+}
+.pms-notif-item:hover { background: rgba(255,255,255,0.03); }
+.pms-notif-item::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+.pms-notif-item.critical::before { background: var(--pms-neg); }
+.pms-notif-item.action::before { background: var(--pms-warn); }
+.pms-notif-item.system::before { background: var(--fg-3); }
+.pms-notif-item .ic {
+  width: 26px; height: 26px; flex: 0 0 26px; border-radius: 7px;
+  display: grid; place-items: center; font-size: 13px;
+  background: rgba(255,255,255,0.05);
+}
+.pms-notif-item.critical .ic { color: var(--pms-neg); background: rgba(255,112,114,0.12); }
+.pms-notif-item.action .ic { color: var(--pms-warn); background: rgba(255,155,79,0.12); }
+.pms-notif-item.system .ic { color: var(--fg-2); }
+.pms-notif-item .bd { flex: 1; min-width: 0; }
+.pms-notif-item .ti { font-size: 12px; font-weight: 600; color: var(--fg-1); }
+.pms-notif-item .bo { font-size: 11px; color: var(--fg-3); margin-top: 2px; line-height: 1.4; }
+.pms-notif-item .me { font-size: 10px; color: var(--fg-muted, var(--fg-3)); margin-top: 4px; font-family: var(--pms-mono); opacity: 0.7; }
+.pms-notif-item .go { color: var(--fg-3); font-size: 14px; align-self: center; opacity: 0; transition: opacity 0.1s; }
+.pms-notif-item:hover .go { opacity: 1; color: var(--pms-accent); }
+.pms-notif-foot { display: flex; gap: 8px; padding: 10px 14px; border-top: 1px solid var(--pms-divider); }
+.pms-notif-foot button {
+  flex: 1; height: 32px; border-radius: 7px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--pms-divider); color: var(--fg-2);
+}
+.pms-notif-foot button:hover { background: rgba(255,255,255,0.08); color: var(--fg-1); }
+.pms-notif-foot button.primary { background: linear-gradient(180deg,#B06CFF,#870FFF); border: 0; color: #fff; }
 
 /* ───────────── Main area ───────────── */
 .pms-main {
@@ -1886,6 +1944,50 @@ tr:hover > td .pms-drill-arrow { opacity: 1; transform: translateX(0); }
   background: rgba(255,255,255,0.02);
   flex-wrap: wrap;
 }
+
+/* Unified filter dropdown */
+.pms-fdrop { position: relative; }
+.pms-fdrop-btn {
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--pms-divider); border-radius: 7px;
+  color: var(--fg-2); font-size: 11px; font-family: inherit; cursor: pointer;
+}
+.pms-fdrop-btn:hover { background: rgba(255,255,255,0.07); }
+.pms-fdrop-btn.active { border-color: rgba(176,108,255,0.35); background: rgba(176,108,255,0.08); }
+.pms-fdrop-btn .lbl { color: var(--fg-3); }
+.pms-fdrop-btn .val { color: var(--fg-1); font-weight: 600; }
+.pms-fdrop-btn .caret { margin-left: 2px; opacity: 0.6; }
+.pms-fdrop-scrim { position: fixed; inset: 0; z-index: 30; }
+.pms-fdrop-menu {
+  position: absolute; top: calc(100% + 4px); left: 0; z-index: 31; min-width: 160px;
+  background: var(--pms-panel-2, #1B1C26); border: 1px solid var(--pms-divider-strong);
+  border-radius: 8px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); padding: 4px; overflow: hidden;
+}
+.pms-fdrop-opt {
+  display: flex; align-items: center; justify-content: space-between; width: 100%;
+  padding: 7px 10px; background: none; border: 0; border-radius: 6px;
+  color: var(--fg-2); font-size: 12px; font-family: inherit; cursor: pointer; text-align: left;
+}
+.pms-fdrop-opt:hover { background: rgba(255,255,255,0.06); color: var(--fg-1); }
+.pms-fdrop-opt.sel { color: var(--pms-accent); }
+.pms-fdrop-opt .ck { color: var(--pms-accent); }
+
+/* Unified filter toggle */
+.pms-ftoggle {
+  display: inline-flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px 0 8px;
+  background: none; border: 0; color: var(--fg-3); font-size: 11px; font-family: inherit; cursor: pointer;
+}
+.pms-ftoggle .track {
+  width: 28px; height: 16px; border-radius: 9px; background: rgba(255,255,255,0.10);
+  position: relative; transition: background 0.15s; flex: 0 0 28px;
+}
+.pms-ftoggle .knob {
+  position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%;
+  background: var(--fg-2); transition: transform 0.15s, background 0.15s;
+}
+.pms-ftoggle.on .track { background: var(--pms-accent); }
+.pms-ftoggle.on .knob { transform: translateX(12px); background: #fff; }
+.pms-ftoggle.on { color: var(--fg-1); }
 .pms-chip {
   display: inline-flex; align-items: center; gap: 6px;
   height: 26px;

@@ -32,14 +32,12 @@ function PositionsPage({ ccy }) {
           ))}
         </div>
         <div className="pms-filters">
-          <span className="pms-chip active">Open <span className="x">×</span></span>
-          <span className="pms-chip">All venues</span>
-          <span className="pms-chip">All assets</span>
-          <span className="pms-chip">Hedged pairs</span>
+          <FilterDropdown icon="status" label="Status" value="open" options={[{v:'open',l:'Open'},{v:'all',l:'All'},{v:'closed',l:'Closed'}]}/>
+          <FilterDropdown icon="venue" label="Venue" value="all" options={[{v:'all',l:'All venues'},{v:'Binance',l:'Binance'},{v:'OKX',l:'OKX'},{v:'Bybit',l:'Bybit'},{v:'Deribit',l:'Deribit'}]}/>
+          <FilterDropdown icon="asset" label="Asset" value="all" options={[{v:'all',l:'All assets'},{v:'BTC',l:'BTC'},{v:'ETH',l:'ETH'},{v:'SOL',l:'SOL'}]}/>
+          <FilterToggle label="Hedged pairs only" checked={false}/>
           <div className="spacer"></div>
-          <label className="row text-xs muted" style={{gap:6}}>
-            <input type="checkbox" checked={showZero} onChange={e=>setShowZero(e.target.checked)}/> Show ~0 positions
-          </label>
+          <FilterToggle label="Show ~0 positions" checked={showZero} onChange={setShowZero}/>
         </div>
         <SortableTable
           rowKey={r=>r.base+r.venue+r.side}

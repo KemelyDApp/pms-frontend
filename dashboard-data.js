@@ -181,6 +181,8 @@
 
     // top positions
     const topPositions = [...POSITIONS].sort((a, b) => Math.abs(b.notional) - Math.abs(a.notional)).slice(0, 6);
+    // recently closed positions — bots hold briefly, so closed roundtrips are the real signal
+    const closedPositions = (window.CLOSED_POSITIONS || []).slice(0, 8);
 
     return {
       span, days,
@@ -235,6 +237,7 @@
       slaCompliance: mkPP(slaCompliance, biasedDelta('slaΔ', span, 0.1)),
       // shared tables
       topPositions,
+      closedPositions,
     };
   }
 

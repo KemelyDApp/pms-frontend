@@ -2,7 +2,7 @@
    Each widget: one primary number + one trend. No action buttons. */
 
 // ─── Shared bits ───────────────────────────────────────────────
-const FRESH = '14:32 UTC';
+const FRESH = 'live';
 
 function TrendChip({ delta, unit = '%', good = 'up', compareOn, prevLabel }) {
   // good: 'up' (rising is good), 'down' (falling is good), 'neutral'
@@ -69,7 +69,6 @@ function StatWidget({ label, metric, format = 'num', desc, good = 'up', unit = '
         <TrendChip delta={delta} unit={deltaUnit} good={good} compareOn={compareOn} prevLabel={prevLabel}/>
       </div>
       {desc && <div className="dash-w-desc">{desc}</div>}
-      {compareOn && prevLabel && <div className="dash-w-compare">prev period: <span className="pms-mono">{prevLabel.replace('prev: ', '')}</span></div>}
     </WidgetShell>
   );
 }
@@ -102,9 +101,9 @@ function LineWidget({ label, series, prevSeries, compareOn, primary, trend, good
             <text x={PADL - 6} y={t.y + 3} textAnchor="end" fontSize="9" fill="var(--fg-muted)" fontFamily="var(--pms-mono)">{fmt.usd(t.v, { compact: true })}</text>
           </g>
         ))}
-        {prev && <path d={path(prev)} fill="none" stroke="var(--fg-3)" strokeWidth="1.3" strokeDasharray="3 3" opacity="0.55"/>}
         <path d={`${path(cur)} L ${PADL + innerW},${PADT + innerH} L ${PADL},${PADT + innerH} Z`} fill="rgba(176,108,255,0.12)"/>
-        <path d={path(cur)} fill="none" stroke="var(--pms-accent)" strokeWidth="1.6" strokeLinejoin="round"/>
+        {prev && <path d={path(prev)} fill="none" stroke="var(--fg-3)" strokeWidth="1.2" strokeDasharray="4 4" opacity="0.5"/>}
+        <path d={path(cur)} fill="none" stroke="var(--pms-accent)" strokeWidth="2" strokeLinejoin="round"/>
       </svg>
       {compareOn && (
         <div className="dash-legend">
@@ -244,12 +243,14 @@ function DonutWidget({ label, segments, compareOn, prevSegments, totalFormat = '
 }
 
 // ─── Table widget ──────────────────────────────────────────────
-function TableWidget({ label, desc, columns, rows, span, onRow, sortNote }) {
+function TableWidget({ label, desc, columns, rows, span, onRow, sortNote, action }) {
   return (
     <div className="dash-w dash-w-table">
       <div className="dash-w-head">
         <span className="dash-w-label">{label}</span>
-        {sortNote && <span className="dash-w-sortnote">{sortNote}</span>}
+        {action
+          ? <button className="dash-w-action" onClick={action.onClick}>{action.label}<span className="arr">→</span></button>
+          : (sortNote && <span className="dash-w-sortnote">{sortNote}</span>)}
       </div>
       {desc && <div className="dash-w-desc" style={{ marginBottom: 4 }}>{desc}</div>}
       <div className="dash-table-scroll">
@@ -357,8 +358,8 @@ function DashControls({ span, setSpan, compare, setCompare, lastUpdated, onRefre
         Compare to previous period
       </label>
       <div className="dash-controls-fresh">
-        <span className="pms-mono">Last updated: {lastUpdated}</span>
-        <button className="dash-refresh" onClick={onRefresh} title="Refresh">↻</button>
+        <span className="dash-live"><span className="dot"></span>LIVE</span>
+        <span className="pms-mono" title="Streaming over WebSocket">streaming · updated {lastUpdated}</span>
       </div>
     </div>
   );
