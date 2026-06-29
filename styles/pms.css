@@ -164,6 +164,7 @@ html, body {
   background: rgba(15,16,23,0.6);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
+  z-index: 100;
 }
 .pms-crumbs {
   display: flex; align-items: center; gap: 8px;
@@ -235,9 +236,9 @@ html, body {
 
 /* ───────────── Notification Center ───────────── */
 .pms-notif-wrap { position: relative; }
-.pms-notif-scrim { position: fixed; inset: 0; z-index: 40; }
+.pms-notif-scrim { position: fixed; inset: 0; z-index: 200; }
 .pms-notif-panel {
-  position: absolute; top: calc(100% + 10px); right: 0; z-index: 41;
+  position: fixed; top: 66px; right: 20px; z-index: 201;
   width: 380px; max-height: 70vh; display: flex; flex-direction: column;
   background: var(--pms-panel-2, #1B1C26);
   border: 1px solid var(--pms-divider-strong);
@@ -643,7 +644,6 @@ html, body {
   border-radius: var(--pms-radius);
   padding: 16px 18px 14px;
   overflow: hidden;
-  isolation: isolate;
 }
 .pms-kpi-v2::before {
   content: '';
@@ -669,7 +669,6 @@ html, body {
 .pms-kpi-v2-head {
   display: flex; align-items: center; gap: 8px;
   margin-bottom: 6px;
-  position: relative; z-index: 1;
 }
 .pms-kpi-v2-head .l {
   font-size: 10px;
@@ -685,7 +684,6 @@ html, body {
   display: flex; align-items: baseline; gap: 14px;
   flex-wrap: wrap;
   margin-bottom: 14px;
-  position: relative; z-index: 1;
 }
 .pms-kpi-v2-value {
   font-family: var(--pms-mono);
@@ -732,7 +730,6 @@ html, body {
 .pms-kpi-v2-viz {
   border-top: 1px dashed var(--pms-divider);
   padding-top: 12px;
-  position: relative; z-index: 1;
 }
 .pms-kpi-v2-viz-label {
   font-size: 9px;

@@ -139,7 +139,7 @@ function TopBar({ crumbs, ccy, setCcy, onToggleSidebar, onNav }) {
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><path d="M3 11V7a5 5 0 0110 0v4l1.5 2H1.5L3 11zM6 14a2 2 0 004 0"/></svg>
             <span className="pms-dot"></span>
           </button>
-          {notifOpen && (
+          {notifOpen && ReactDOM.createPortal(
             <>
               <div className="pms-notif-scrim" onClick={()=>setNotifOpen(false)}></div>
               <div className="pms-notif-panel">
@@ -169,7 +169,8 @@ function TopBar({ crumbs, ccy, setCcy, onToggleSidebar, onNav }) {
                   <button className="primary" onClick={()=>{ setNotifOpen(false); onNav && onNav('risk'); }}>View all events</button>
                 </div>
               </div>
-            </>
+            </>,
+            document.body
           )}
         </div>
       </div>

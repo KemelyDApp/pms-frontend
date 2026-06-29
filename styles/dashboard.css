@@ -212,7 +212,7 @@
 /* Table widget — natural-width columns, left-packed (never stretched/spread) */
 .dash-table-scroll { overflow-x: auto; overflow-y: hidden; margin: 2px -15px 0; padding: 0 15px; }
 .dash-table { width: 100%; min-width: 0; }
-.dash-table thead th { position: static; padding-top: 5px; padding-bottom: 5px; white-space: nowrap; }
+.dash-table thead th { padding-top: 5px; padding-bottom: 5px; white-space: nowrap; }
 .dash-table tbody td { height: 28px; white-space: nowrap; }
 .dash-empty { text-align: center; color: var(--pms-pos); font-size: 12px; padding: 14px 0; }
 
