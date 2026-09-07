@@ -140,6 +140,8 @@ function FlowSankey({ stages, flows, height = 360, accentByStage }) {
 function FundFlowPage() {
   const [tab, setTab] = React.useState('deposits');
   const [selected, setSelected] = React.useState(null);
+  const [newOpen, setNewOpen] = React.useState(false);
+  const [wf, setWf] = React.useState({ investor:'', amount:'', asset:'USDC', chain:'Ethereum', strategy:'mn-arb', address:'' });
   const isDeposit = tab==='deposits';
   const stages = isDeposit ? [...DEPOSIT_STAGES, 'D_FAIL'] : [...WITHDRAW_STAGES, 'W_FAIL'];
   const flows = isDeposit ? DEPOSIT_FLOWS : WITHDRAW_FLOWS;
@@ -170,7 +172,7 @@ function FundFlowPage() {
             <button className={tab==='withdrawals'?'active':''} onClick={()=>setTab('withdrawals')}>Withdrawals</button>
           </div>
           <button className="pms-btn ghost">Export CSV</button>
-          <button className="pms-btn primary">+ New {isDeposit?'deposit':'withdrawal'}</button>
+          <button className="pms-btn primary" onClick={()=>setNewOpen(true)}>+ New {isDeposit?'deposit':'withdrawal'}</button>
         </div>
       </div>
       <PageMeta src="transfer-service · orchestrator · risk-core" refresh="WS · 1s tick (KYT 10s)" role="PM · OPS · COMPLIANCE" note={`${intents.length} intents in flight · 24h conversion ${conversion.toFixed(1)}%`}/>
@@ -256,10 +258,34 @@ function FundFlowPage() {
           </>
         )}
       </Modal>
+
+      <FormModal open={newOpen} title={isDeposit ? 'New deposit' : 'New withdrawal'} onClose={()=>setNewOpen(false)}
+        submitLabel={isDeposit ? 'Create deposit intent' : 'Submit withdrawal'} submitTone={isDeposit ? 'primary' : 'danger'}
+        canSubmit={wf.investor && wf.amount && (isDeposit || wf.address)}
+        subtitle={isDeposit
+          ? 'Create a deposit intent for an investor. It enters the pipeline at KYT screening and credits once confirmed on-chain.'
+          : 'Submit a withdrawal on behalf of an investor. It enters the withdrawal pipeline: KYT → approval → lock check → provider → on-chain.'}
+        note={isDeposit ? 'Deposit intent created — design prototype, not live.' : 'Withdrawal submitted for approval — design prototype, not live.'}>
+        <FormField label="Investor" required><FormSelect value={wf.investor} onChange={v=>setWf({...wf,investor:v})}
+          options={[{v:'',l:'Select investor…'}, ...(window.INVESTORS||[]).map(i=>({v:i.id,l:`${i.id} · ${i.name}`}))]}/></FormField>
+        <FormRow>
+          <FormField label="Amount" required><FormInput value={wf.amount} onChange={v=>setWf({...wf,amount:v})} placeholder="0" prefix="$" mono/></FormField>
+          <FormField label="Asset" required><FormSelect value={wf.asset} onChange={v=>setWf({...wf,asset:v})} options={['USDC','USDT','BTC','ETH']}/></FormField>
+          <FormField label="Chain" required><FormSelect value={wf.chain} onChange={v=>setWf({...wf,chain:v})} options={['Ethereum','TRON','Solana','Bitcoin']}/></FormField>
+        </FormRow>
+        <FormField label="Strategy" required><FormSelect value={wf.strategy} onChange={v=>setWf({...wf,strategy:v})}
+          options={[{v:'mn-arb',l:'Market-Neutral Arb'},{v:'x-arb',l:'Cross-Exchange Arb'},{v:'prop',l:'Proprietary'}]}/></FormField>
+        {!isDeposit && <FormField label="Destination address" required hint="Must be on the investor's approved whitelist"><FormInput value={wf.address} onChange={v=>setWf({...wf,address:v})} placeholder="0x… / T… / bc1…" mono/></FormField>}
+        {!isDeposit && (
+          <div className="pms-confirm-banner warn" style={{marginBottom:0}}>
+            <span className="ic">⚠</span>
+            <div>Withdrawals run KYT + approval + 24h provider lock checks. Amounts above policy limits require 2-of-2 signing.</div>
+          </div>
+        )}
+      </FormModal>
     </>
   );
 }
-
 // ───────────────────────────────────────────────────────────────
 //  Investors page — balances, FIFO lots, unlock timeline
 // ───────────────────────────────────────────────────────────────

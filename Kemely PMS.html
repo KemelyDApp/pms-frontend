@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="styles/colors_and_type.css"/>
   <link rel="stylesheet" href="styles/pms.css"/>
   <link rel="stylesheet" href="styles/dashboard.css"/>
+  <link rel="stylesheet" href="styles/overview.css"/>
+  <link rel="stylesheet" href="styles/repo-features.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,9 +27,11 @@
     window.PMS_TWEAKS_DEFAULTS = PMS_TWEAKS;
   </script>
   <script src="data.js"></script>
+  <script src="permissions.js"></script>
   <script src="data-v2.js"></script>
   <script src="dashboard-data.js"></script>
   <script type="text/babel" src="components.jsx"></script>
+  <script type="text/babel" src="forms.jsx"></script>
   <script type="text/babel" src="sidebar.jsx"></script>
   <script type="text/babel" src="page-overview.jsx"></script>
   <script type="text/babel" src="page-investor-detail.jsx"></script>
@@ -35,11 +39,25 @@
   <script type="text/babel" src="page-dashboard.jsx"></script>
   <script type="text/babel" src="pages.jsx"></script>
   <script type="text/babel" src="pages-v2.jsx"></script>
+  <script type="text/babel" src="page-strategy-create.jsx"></script>
+  <script type="text/babel" src="page-tradesim.jsx"></script>
+  <script type="text/babel" src="page-roles-login.jsx"></script>
+  <script type="text/babel" src="pages-hub.jsx"></script>
   <script type="text/babel" src="tweaks-panel.jsx"></script>
   <script type="text/babel">
     function App() {
       const [active, setActive] = React.useState('overview');
+      const [sub, setSub] = React.useState(null);
       const [poolId, setPoolId] = React.useState(null);
+      const [roleId, setRoleIdRaw] = React.useState(() => { try { return localStorage.getItem('pms.role') || 'admin'; } catch (e) { return 'admin'; } });
+      const setRoleId = (r) => { setRoleIdRaw(r); try { localStorage.setItem('pms.role', r); } catch (e) {} };
+      const [rolesNonce, setRolesNonce] = React.useState(0);
+      const can = React.useCallback((scope) => pmsCan(roleId, scope), [roleId, rolesNonce]);
+      React.useEffect(() => { const h = () => setRolesNonce(n => n + 1); window.addEventListener('pms:roles', h); return () => window.removeEventListener('pms:roles', h); }, []);
+      // Wallet session
+      const [session, setSession] = React.useState(() => { try { return JSON.parse(localStorage.getItem('pms.session') || 'null'); } catch (e) { return null; } });
+      const login = (s) => { setSession(s); try { localStorage.setItem('pms.session', JSON.stringify(s)); } catch (e) {} };
+      const logout = () => { setSession(null); try { localStorage.removeItem('pms.session'); } catch (e) {} setActive('overview'); setSub(null); setPoolId(null); };
       const [tweaks, setTweak] = useTweaks(window.PMS_TWEAKS_DEFAULTS);
       const ccy = tweaks.currency;
 
@@ -48,41 +66,45 @@
         document.documentElement.setAttribute('data-accent', tweaks.accent);
       }, [tweaks.density, tweaks.accent]);
 
+      // Nav scopes — if the role loses access to the current tab, fall back to Overview
+      const NAV_SCOPE = { overview: null, strategies: 'strategies', tradesim: 'research', trading: 'trading', investors: 'investors', fundflow: 'fundflow', recon: 'recon', finance: 'finance', admin: 'admin' };
+      React.useEffect(() => { if (!can(NAV_SCOPE[active])) { setActive('overview'); setSub(null); setPoolId(null); } }, [roleId, rolesNonce]);
+
       const labels = {
-        overview:'Overview', positions:'Positions', blotter:'Orders & blotter',
-        pnl:'P&L attribution', firm:'Firm P&L', strategies:'Strategies', bots:'Bots & sagas',
-        fundflow:'Fund flow', investors:'Investors',
-        risk:'Risk & limits', recon:'Reconciliation', venues:'Counterparties',
-        transfers:'Transfers', reports:'Reports', admin:'Admin'
+        overview:'Overview', strategies:'Strategies', tradesim:'TradeSim Hub', trading:'Trading', investors:'Investors',
+        fundflow:'Fund flow', recon:'Reconciliation', finance:'Finance', admin:'Admin',
+      };
+      const SUB_LABELS = {
+        list:'Strategies', bots:'Bots & sagas', new:'Create strategy',
+        positions:'Positions', blotter:'Orders & executions', pnl: active === 'finance' ? 'Firm P&L' : 'P&L attribution',
+        pipeline:'Deposits & withdrawals', approvals:'Approvals', admin:'Users, keys & audit', roles:'Roles & permissions', venues:'Counterparties',
       };
 
-      const goTo = (id) => { setActive(id); setPoolId(null); };
-      const openPool = (id) => { setActive('strategies'); setPoolId(id); };
+      const goTo = (id, s) => { if (!can(NAV_SCOPE[id])) return; setActive(id); setSub(s || null); setPoolId(null); window.scrollTo(0, 0); };
+      const openPool = (id) => { if (!can('strategies')) return; setActive('strategies'); setSub('list'); setPoolId(id); window.scrollTo(0, 0); };
 
       const pageMap = {
-        overview: <DashboardPage ccy={ccy} onOpenPool={openPool} onNav={goTo}/>,
-        positions: <PositionsPage ccy={ccy}/>,
-        blotter: <BlotterPage/>,
-        pnl: <PnlPage/>,
-        firm: <FirmPnlPage/>,
-        strategies: poolId ? <PoolDetailPage poolId={poolId} onBack={()=>setPoolId(null)}/> : <StrategiesPage onSelect={setPoolId}/>,
-        bots: <BotsPage/>,
-        fundflow: <FundFlowPage/>,
+        overview: <DashboardPage ccy={ccy} onOpenPool={openPool} onNav={goTo} can={can} roleId={roleId}/>,
+        strategies: <StrategiesHub sub={sub} setSub={setSub} can={can} poolId={poolId} setPoolId={setPoolId}/>,
+        tradesim: <TradeSimPage/>,
+        trading: <TradingHub sub={sub} setSub={setSub} can={can} ccy={ccy}/>,
         investors: <InvestorsPage/>,
-        risk: <RiskPage/>,
+        fundflow: <FundFlowHub sub={sub} setSub={setSub} can={can}/>,
         recon: <ReconPage/>,
-        venues: <VenuesPage/>,
-        transfers: <TransfersPage/>,
-        reports: <ReportsPage/>,
-        admin: <AdminPage/>,
+        finance: <FinanceHub sub={sub} setSub={setSub} can={can}/>,
+        admin: <AdminHub sub={sub} setSub={setSub} can={can}/>,
       };
 
-      const crumbLabel = labels[active] + (active==='strategies' && poolId ? ' / ' + (POOLS.find(p=>p.id===poolId)?.name || '') : '');
+      const subLbl = sub && SUB_LABELS[sub];
+      const crumbLabel = labels[active]
+        + (active==='strategies' && poolId ? ' / ' + (POOLS.find(p=>p.id===poolId)?.name || '') : (subLbl && subLbl !== labels[active] && active !== 'overview' ? ' / ' + subLbl : ''));
+
+      if (!session) return <LoginPage onLogin={login}/>;
 
       return (
         <div className="pms-app" data-screen-label={crumbLabel}>
-          <Sidebar active={active} onNav={goTo}/>
-          <TopBar crumbs={['Kemely PMS', crumbLabel]} ccy={ccy} setCcy={(c)=>setTweak('currency', c)} onNav={goTo}/>
+          <Sidebar active={active} onNav={goTo} roleId={roleId} can={can} session={session} onLogout={logout}/>
+          <TopBar crumbs={['Kemely PMS', crumbLabel]} ccy={ccy} setCcy={(c)=>setTweak('currency', c)} onNav={goTo} roleId={roleId} setRoleId={setRoleId} session={session} onLogout={logout}/>
           <main className="pms-main">
             <div className="pms-page">
               {pageMap[active]}
@@ -93,6 +115,9 @@
               <TweakRadio label="Density" value={tweaks.density} options={[{label:'Comfortable',value:'comfortable'},{label:'Compact',value:'compact'}]} onChange={v=>setTweak('density', v)}/>
               <TweakRadio label="Currency" value={tweaks.currency} options={[{label:'USD',value:'USD'},{label:'USDC',value:'USDC'},{label:'BTC',value:'BTC'}]} onChange={v=>setTweak('currency', v)}/>
               <TweakRadio label="Brand accent" value={tweaks.accent} options={[{label:'Purple',value:'purple'},{label:'Orange',value:'orange'}]} onChange={v=>setTweak('accent', v)}/>
+            </TweakSection>
+            <TweakSection title="Permissions preview">
+              <TweakSelect label="Viewing as role" value={roleId} options={Object.entries(pmsRoles()).map(([v, r]) => ({ label: r.label, value: v }))} onChange={setRoleId}/>
             </TweakSection>
           </TweaksPanel>
         </div>

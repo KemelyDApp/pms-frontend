@@ -3,6 +3,9 @@
 function PositionsPage({ ccy }) {
   const [filter, setFilter] = React.useState('all');
   const [showZero, setShowZero] = React.useState(false);
+  const [modal, setModal] = React.useState(null);
+  const [ord, setOrd] = React.useState({ venue:'Binance', sym:'BTCUSDT', side:'buy', type:'LIMIT', qty:'', price:'', strat:'mn-arb' });
+  const [hedge, setHedge] = React.useState({ asset:'BTC', exposure:'', venue:'OKX' });
   const filtered = POSITIONS.filter(p => filter==='all' || p.pool===Number(filter));
   const totalNotional = filtered.reduce((s,p)=>s+Math.abs(p.notional),0);
   const totalUpnl = filtered.reduce((s,p)=>s+p.upnl,0);
@@ -15,8 +18,8 @@ function PositionsPage({ ccy }) {
         </div>
         <div className="pms-page-actions">
           <button className="pms-btn ghost">Export</button>
-          <button className="pms-btn">Hedge calculator</button>
-          <button className="pms-btn primary">+ New order</button>
+          <button className="pms-btn" onClick={()=>setModal('hedge')}>Hedge calculator</button>
+          <button className="pms-btn primary" onClick={()=>setModal('order')}>+ New order</button>
         </div>
       </div>
       <div className="pms-kpis" style={{gridTemplateColumns:'repeat(4,1fr)'}}>
@@ -64,6 +67,46 @@ function PositionsPage({ ccy }) {
           rows={filtered}
         />
       </div>
+
+      <FormModal open={modal==='order'} title="New order" onClose={()=>setModal(null)} submitLabel="Submit order"
+        canSubmit={ord.qty && (ord.type==='MARKET' || ord.price)}
+        subtitle="Manually submit an order outside the bots. Routed to the venue connector and logged in the blotter."
+        note="Order routed to venue connector — design prototype, not live.">
+        <FormRow>
+          <FormField label="Strategy" required><FormSelect value={ord.strat} onChange={v=>setOrd({...ord,strat:v})}
+            options={[{v:'mn-arb',l:'Market-Neutral Arb'},{v:'x-arb',l:'Cross-Exchange Arb'},{v:'prop',l:'Proprietary'}]}/></FormField>
+          <FormField label="Venue" required><FormSelect value={ord.venue} onChange={v=>setOrd({...ord,venue:v})}
+            options={['Binance','OKX','Bybit','Deribit','Kraken','Coinbase']}/></FormField>
+        </FormRow>
+        <FormRow>
+          <FormField label="Symbol" required><FormInput value={ord.sym} onChange={v=>setOrd({...ord,sym:v})} placeholder="BTCUSDT" mono/></FormField>
+          <FormField label="Side" required><FormSeg value={ord.side} onChange={v=>setOrd({...ord,side:v})} options={[{v:'buy',l:'Buy'},{v:'sell',l:'Sell'}]}/></FormField>
+        </FormRow>
+        <FormRow>
+          <FormField label="Order type" required><FormSeg value={ord.type} onChange={v=>setOrd({...ord,type:v})} options={[{v:'LIMIT',l:'Limit'},{v:'MARKET',l:'Market'}]}/></FormField>
+          <FormField label="Quantity" required><FormInput value={ord.qty} onChange={v=>setOrd({...ord,qty:v})} placeholder="0.00" mono/></FormField>
+        </FormRow>
+        {ord.type==='LIMIT' && <FormField label="Limit price" required><FormInput value={ord.price} onChange={v=>setOrd({...ord,price:v})} placeholder="0.00" prefix="$" mono/></FormField>}
+      </FormModal>
+
+      <FormModal open={modal==='hedge'} title="Hedge calculator" onClose={()=>setModal(null)} submitLabel="Stage hedge order"
+        canSubmit={!!hedge.exposure}
+        subtitle="Compute the offsetting position needed to neutralize net delta on an asset, then stage the hedge order."
+        note="Hedge order staged — design prototype, not live.">
+        <FormRow>
+          <FormField label="Asset" required><FormSelect value={hedge.asset} onChange={v=>setHedge({...hedge,asset:v})} options={['BTC','ETH','SOL','AVAX']}/></FormField>
+          <FormField label="Hedge venue" required><FormSelect value={hedge.venue} onChange={v=>setHedge({...hedge,venue:v})} options={['OKX','Bybit','Binance','Deribit']}/></FormField>
+        </FormRow>
+        <FormField label="Net exposure to hedge" hint="Positive = long exposure (will stage a short hedge)"><FormInput value={hedge.exposure} onChange={v=>setHedge({...hedge,exposure:v})} placeholder="0.00" suffix={hedge.asset} mono/></FormField>
+        {hedge.exposure && !isNaN(parseFloat(hedge.exposure)) && (
+          <div className="pms-confirm-impact" style={{marginBottom:0}}>
+            <div className="row"><span className="k">Hedge side</span><span className="v">{parseFloat(hedge.exposure)>=0?'SHORT':'LONG'}</span></div>
+            <div className="row"><span className="k">Hedge quantity</span><span className="v">{Math.abs(parseFloat(hedge.exposure)).toFixed(4)} {hedge.asset}</span></div>
+            <div className="row"><span className="k">Instrument</span><span className="v">{hedge.asset}-PERP · {hedge.venue}</span></div>
+            <div className="row"><span className="k">Resulting net delta</span><span className="v pms-pos">≈ 0.00</span></div>
+          </div>
+        )}
+      </FormModal>
     </>
   );
 }
@@ -71,6 +114,7 @@ function PositionsPage({ ccy }) {
 function BlotterPage() {
   const [tick, setTick] = React.useState(0);
   const [flashKey, setFlashKey] = React.useState(null);
+  const [confirm, setConfirm] = React.useState(null);
   React.useEffect(() => {
     const t = setInterval(() => {
       setFlashKey(BLOTTER[Math.floor(Math.random()*Math.min(5, BLOTTER.length))].id);
@@ -96,8 +140,8 @@ function BlotterPage() {
         </div>
         <div className="pms-page-actions">
           <span className="pms-pill info"><span className="dot"></span>STREAMING</span>
-          <button className="pms-btn ghost">Pause</button>
-          <button className="pms-btn">Cancel all</button>
+          <button className="pms-btn ghost" onClick={()=>setConfirm('pause')}>Pause</button>
+          <button className="pms-btn danger" onClick={()=>setConfirm('cancel')}>Cancel all</button>
         </div>
       </div>
       <div className="pms-card">
@@ -127,10 +171,24 @@ function BlotterPage() {
             }},
             { key:'strat', label:'Strategy', render:r=> <span className="pms-pill purple">{r.strat}</span>},
             { key:'fees', label:'Fees', num:true, render:r=> r.fees>0?fmt.usd(r.fees,{dec:2}):'—'},
+            { key:'act', label:'', render:r=> (r.status==='WORKING'||r.status==='PARTIAL')
+              ? <button className="pms-row-btn neg" onClick={e=>{ e.stopPropagation(); setConfirm({ order: r }); }}>Cancel</button>
+              : <span className="muted text-xs">—</span> },
           ]}
           rows={BLOTTER}
         />
       </div>
+      <ConfirmModal open={!!(confirm && confirm.order)} title={`Cancel order ${confirm?.order?.id || ''}`} tone="danger" onClose={()=>setConfirm(null)} confirmLabel="Cancel order"
+        body={confirm?.order ? <><strong>{confirm.order.side.toUpperCase()} {fmt.num(confirm.order.qty, 3)} {confirm.order.sym}</strong> @ {fmt.num(confirm.order.price, confirm.order.price<10?4:2)} on {confirm.order.venue} · {confirm.order.status}. The bot ({confirm.order.strat}) may re-submit unless paused.</> : null}
+        impact={confirm?.order ? [{k:'Order', v: confirm.order.id}, {k:'Strategy', v: confirm.order.strat}, {k:'Remaining qty', v: fmt.num(confirm.order.qty, 3)}] : null}/>
+      <ConfirmModal open={confirm==='pause'} title="Pause all bots" tone="danger" onClose={()=>setConfirm(null)} confirmLabel="Pause all bots"
+        requireReason
+        body={<><strong>This stops all working bots from placing new orders.</strong> Open positions remain — only new order submission is halted. Existing working orders stay live unless you also cancel them.</>}
+        impact={[{k:'Bots affected', v:'5 active'}, {k:'Working orders', v:'untouched'}, {k:'Open positions', v:'untouched'}]}/>
+      <ConfirmModal open={confirm==='cancel'} title="Cancel ALL working orders" tone="danger" onClose={()=>setConfirm(null)} confirmLabel="Cancel all orders"
+        requireReason confirmPhrase="CANCEL ALL"
+        body={<><strong>Irreversible.</strong> Cancels every working & partially-filled order across all venues. Bots may immediately re-submit unless you also pause them. Hedged legs may be left one-sided — review exposure after.</>}
+        impact={[{k:'Working orders', v:'all venues'}, {k:'Open positions', v:'untouched'}, {k:'Bots', v:'still active — re-submit risk'}]}/>
     </>
   );
 }
@@ -370,7 +428,9 @@ function ReconPage() {
   );
 }
 
-function StrategiesPage({ onSelect }) {
+function StrategiesPage({ onSelect, onNew }) {
+  const [modal, setModal] = React.useState(null);
+  const [st, setSt] = React.useState({ category:'mn-arb', name:'', venues:'', capital:'', perf:'20', mgmt:'2', dd:'2.00' });
   return (
     <>
       <div className="pms-page-head">
@@ -380,7 +440,7 @@ function StrategiesPage({ onSelect }) {
         </div>
         <div className="pms-page-actions">
           <button className="pms-btn">Compare</button>
-          <button className="pms-btn primary">+ New pool</button>
+          <button className="pms-btn primary" onClick={()=> onNew ? onNew() : setModal('new')}>+ New strategy</button>
         </div>
       </div>
       <div className="pms-grid-3">
@@ -396,9 +456,6 @@ function StrategiesPage({ onSelect }) {
             <div className="pms-card-body">
               <div className="pms-bignum">{fmt.usd(p.nav, {compact:true})}</div>
               <div className="text-xs muted" style={{marginTop:2}}>NAV per share <span className="pms-mono" style={{color:'var(--fg-1)'}}>{p.nav_per_share.toFixed(4)}</span></div>
-              <div style={{marginTop:14}}>
-                <Sparkline data={gensSpark(p.id*7, 40, p.pnl_30d>0?0.3:-0.2)} w={400} h={48} color={p.pnl_30d>0?'var(--pms-pos)':'var(--pms-neg)'}/>
-              </div>
               <div className="pms-grid-row" style={{gridTemplateColumns:'1fr 1fr', gap:12, marginTop:14}}>
                 <div><div className="text-xs muted">APY (90d annualized)</div><div className="strong pms-pos" style={{fontSize:16}}>{p.apy.toFixed(2)}%</div></div>
                 <div><div className="text-xs muted">Drawdown</div><div className={p.drawdown_pct<-3?'pms-neg strong':'strong'} style={{fontSize:16}}>{p.drawdown_pct.toFixed(2)}%</div></div>
@@ -418,12 +475,29 @@ function StrategiesPage({ onSelect }) {
               <div className="row" style={{marginTop:14, gap:8}}>
                 <span className="pms-pill purple">perf {p.fees.perf}% / mgmt {p.fees.mgmt}%</span>
                 <div className="spacer"></div>
-                <span className="pms-link text-xs">Open detail →</span>
               </div>
             </div>
           </div>
         ))}
       </div>
+
+      <FormModal open={modal==='new'} title="New strategy" onClose={()=>setModal(null)} submitLabel="Create strategy"
+        canSubmit={st.name && st.venues && st.capital}
+        subtitle="A strategy is one trading bot running a fixed logic across N venue pools. Creating it provisions a bot and allocates initial capital."
+        note="Strategy provisioned — design prototype, not live.">
+        <FormRow>
+          <FormField label="Trading logic (category)" required><FormSelect value={st.category} onChange={v=>setSt({...st,category:v})}
+            options={[{v:'mn-arb',l:'Market-Neutral Arb'},{v:'x-arb',l:'Cross-Exchange Arb'},{v:'prop',l:'Proprietary'}]}/></FormField>
+          <FormField label="Initial capital" required><FormInput value={st.capital} onChange={v=>setSt({...st,capital:v})} placeholder="0" prefix="$" mono/></FormField>
+        </FormRow>
+        <FormField label="Strategy name" required><FormInput value={st.name} onChange={v=>setSt({...st,name:v})} placeholder="e.g. Basis · Binance × OKX"/></FormField>
+        <FormField label="Venue pools" required hint="Comma-separated venues this bot will trade across"><FormInput value={st.venues} onChange={v=>setSt({...st,venues:v})} placeholder="Binance, OKX"/></FormField>
+        <FormRow>
+          <FormField label="Performance fee" required><FormInput value={st.perf} onChange={v=>setSt({...st,perf:v})} suffix="%" mono/></FormField>
+          <FormField label="Management fee" required><FormInput value={st.mgmt} onChange={v=>setSt({...st,mgmt:v})} suffix="% / yr" mono/></FormField>
+          <FormField label="Drawdown limit" required><FormInput value={st.dd} onChange={v=>setSt({...st,dd:v})} prefix="−" suffix="%" mono/></FormField>
+        </FormRow>
+      </FormModal>
     </>
   );
 }
@@ -459,7 +533,7 @@ function PoolDetailPage({ poolId, onBack }) {
           <div className="sub">Strategy #{p.id} · 1 bot ({p.bot_id}) · {p.cex_pools.length} pools · {p.strategy}</div>
         </div>
         <div className="pms-page-actions">
-          <button className="pms-btn ghost">Edit allocation</button>
+          <button className="pms-btn ghost" title="Re-weight this strategy's capital across its legs (pools / venues) — changes each leg's allocation % and the bot's allocated amount">Edit leg allocation</button>
           <button className="pms-btn">Bot console</button>
           <button className="pms-btn danger">Pause strategy</button>
         </div>
@@ -907,6 +981,8 @@ function BotLocksCard({ locks }) {
 
 function VenuesPage() {
   const [expanded, setExpanded] = React.useState({});
+  const [addOpen, setAddOpen] = React.useState(false);
+  const [vn, setVn] = React.useState({ name:'', type:'CEX', custody:'Fireblocks', apiKey:'', apiSecret:'', initialCapital:'' });
   // Per-venue sub-account roll-up — venue → [{account, type, capital, free, used, status}]
   const SUBS = {
     Binance: [
@@ -942,7 +1018,7 @@ function VenuesPage() {
         </div>
         <div className="pms-page-actions">
           <button className="pms-btn ghost">Concentration report</button>
-          <button className="pms-btn primary">+ Add venue</button>
+          <button className="pms-btn primary" onClick={()=>setAddOpen(true)}>+ Add venue</button>
         </div>
       </div>
       <PageMeta src="venue connectors · risk-core" refresh="WS · 5s tick" role="PM · RISK · OPS" note={`${VENUES.filter(v=>v.status!=='healthy').length} venues degraded · click any row to expand sub-accounts`}/>
@@ -1009,6 +1085,20 @@ function VenuesPage() {
           </table>
         </div>
       </div>
+
+      <FormModal open={addOpen} title="Add venue / counterparty" onClose={()=>setAddOpen(false)} submitLabel="Add venue & verify keys"
+        canSubmit={vn.name && vn.apiKey && vn.apiSecret}
+        subtitle="Register a new counterparty. API keys are stored in the custody vault; balances are read-only until verified by a 2-of-2 signature."
+        note="Venue registered — keys queued for verification. Design prototype, not live.">
+        <FormRow>
+          <FormField label="Venue name" required><FormInput value={vn.name} onChange={v=>setVn({...vn,name:v})} placeholder="e.g. Gate.io"/></FormField>
+          <FormField label="Type" required><FormSelect value={vn.type} onChange={v=>setVn({...vn,type:v})} options={[{v:'CEX',l:'CEX'},{v:'Self-Custody',l:'Self-Custody'}]}/></FormField>
+        </FormRow>
+        <FormField label="Custody integration"><FormSelect value={vn.custody} onChange={v=>setVn({...vn,custody:v})} options={['Fireblocks','Copper','Direct API','Cold storage']}/></FormField>
+        <FormField label="API key" required><FormInput value={vn.apiKey} onChange={v=>setVn({...vn,apiKey:v})} placeholder="Read + trade scope" mono/></FormField>
+        <FormField label="API secret" required hint="Encrypted at rest · withdraw scope disabled by default"><FormInput value={vn.apiSecret} onChange={v=>setVn({...vn,apiSecret:v})} type="password" placeholder="••••••••" mono/></FormField>
+        <FormField label="Initial capital allocation"><FormInput value={vn.initialCapital} onChange={v=>setVn({...vn,initialCapital:v})} placeholder="0" prefix="$" mono/></FormField>
+      </FormModal>
     </>
   );
 }
@@ -1166,6 +1256,8 @@ function TransfersPage() {
 }
 
 function ReportsPage() {
+  const [gen, setGen] = React.useState(false);
+  const [rp, setRp] = React.useState({ type:'Monthly NAV statement', period:'April 2026', strategy:'all', format:'PDF' });
   const REPORTS = [
     { name:"Monthly NAV statement", period:"April 2026", type:"PDF", size:"412 KB", generated:"2026-05-01 09:00", status:"ready"},
     { name:"Daily P&L attribution", period:"2026-04-30", type:"PDF", size:"118 KB", generated:"2026-05-01 06:00", status:"ready"},
@@ -1183,7 +1275,7 @@ function ReportsPage() {
         </div>
         <div className="pms-page-actions">
           <button className="pms-btn ghost">Schedule</button>
-          <button className="pms-btn primary">+ Generate report</button>
+          <button className="pms-btn primary" onClick={()=>setGen(true)}>+ Generate report</button>
         </div>
       </div>
       <div className="pms-card">
@@ -1201,12 +1293,29 @@ function ReportsPage() {
           rows={REPORTS}
         />
       </div>
+
+      <FormModal open={gen} title="Generate report" onClose={()=>setGen(false)} submitLabel="Generate report"
+        subtitle="Build a report on demand. It is queued and appears in the table when ready."
+        note="Report queued — it will appear in the table when ready. Design prototype, not live.">
+        <FormField label="Report type" required><FormSelect value={rp.type} onChange={v=>setRp({...rp,type:v})}
+          options={['Monthly NAV statement','Daily P&L attribution','Risk & compliance summary','Tax lot detail (US)','Counterparty exposure','Strategy stress scenarios','Investor statement']}/></FormField>
+        <FormRow>
+          <FormField label="Period" required><FormSelect value={rp.period} onChange={v=>setRp({...rp,period:v})}
+            options={['April 2026','March 2026','Q1 2026','YTD 2026','Custom range']}/></FormField>
+          <FormField label="Format" required><FormSeg value={rp.format} onChange={v=>setRp({...rp,format:v})} options={['PDF','CSV','XLSX']}/></FormField>
+        </FormRow>
+        <FormField label="Strategy scope"><FormSelect value={rp.strategy} onChange={v=>setRp({...rp,strategy:v})}
+          options={[{v:'all',l:'All strategies (firm-wide)'},{v:'mn-arb',l:'Market-Neutral Arb'},{v:'x-arb',l:'Cross-Exchange Arb'},{v:'prop',l:'Proprietary'}]}/></FormField>
+      </FormModal>
     </>
   );
 }
 
 function AdminPage() {
   const [tab, setTab] = React.useState('team');
+  const [modal, setModal] = React.useState(null);
+  const [inv, setInv] = React.useState({ wallet:'', role:'PM', email:'' });
+  const [aud, setAud] = React.useState({ from:'2026-05-01', to:'2026-05-12', actor:'all', action:'all', format:'CSV' });
   const TABS = [
     { id:'team', label:'Team & keys', count: USERS.length + API_KEYS.length },
     { id:'health', label:'System health', count: SERVICES.filter(s=>s.status!=='healthy').length || null, badge: SERVICES.filter(s=>s.status!=='healthy').length ? 'warn' : null },
@@ -1221,8 +1330,8 @@ function AdminPage() {
           <div className="sub">{USERS.length} users · {API_KEYS.length} API keys · {AUDIT_LOG.length} audit events today · {SERVICES.filter(s=>s.status==='degraded').length} service degraded</div>
         </div>
         <div className="pms-page-actions">
-          <button className="pms-btn ghost">Download audit (CSV)</button>
-          <button className="pms-btn primary">+ Invite user</button>
+          <button className="pms-btn ghost" onClick={()=>setModal('audit')}>Download audit (CSV)</button>
+          <button className="pms-btn primary" onClick={()=>setModal('invite')}>+ Invite user</button>
         </div>
       </div>
       <PageMeta src="auth · audit-service · prometheus · config-store" refresh="health: 5s · audit: live · users/keys: on-change" role="ADMIN only" note="Audit log is write-once · all actions immutable"/>
@@ -1240,6 +1349,32 @@ function AdminPage() {
       {tab==='health' && <AdminHealthTab/>}
       {tab==='audit' && <AdminAuditTab/>}
       {tab==='config' && <AdminConfigTab/>}
+
+      <FormModal open={modal==='invite'} title="Invite team member" onClose={()=>setModal(null)} submitLabel="Send invite"
+        canSubmit={inv.wallet.trim().length > 8}
+        subtitle="Grant a teammate access by their wallet address. They sign in with their wallet — no password. Role sets their permission scope."
+        note="Invite created — they gain access on first wallet sign-in. Design prototype, not live.">
+        <FormField label="Wallet address" required hint="EVM address — they authenticate by signing with this wallet"><FormInput value={inv.wallet} onChange={v=>setInv({...inv,wallet:v})} placeholder="0x…" mono/></FormField>
+        <FormRow>
+          <FormField label="Role" required><FormSelect value={inv.role} onChange={v=>setInv({...inv,role:v})} options={['PM','Risk','Ops','Compliance','Sales','Admin']}/></FormField>
+          <FormField label="Email (optional)" hint="For notifications only"><FormInput value={inv.email} onChange={v=>setInv({...inv,email:v})} placeholder="name@kemely.fund"/></FormField>
+        </FormRow>
+      </FormModal>
+
+      <FormModal open={modal==='audit'} title="Download audit log" onClose={()=>setModal(null)} submitLabel="Generate export"
+        subtitle="Export immutable audit events for a date range. Large exports are prepared async and download when ready."
+        note="Export queued — download link will appear when ready. Design prototype, not live.">
+        <FormRow>
+          <FormField label="From" required><FormInput value={aud.from} onChange={v=>setAud({...aud,from:v})} type="date" mono/></FormField>
+          <FormField label="To" required><FormInput value={aud.to} onChange={v=>setAud({...aud,to:v})} type="date" mono/></FormField>
+        </FormRow>
+        <FormRow>
+          <FormField label="Actor"><FormSelect value={aud.actor} onChange={v=>setAud({...aud,actor:v})} options={[{v:'all',l:'All actors'},...USERS.map(u=>({v:u.email,l:u.name}))]}/></FormField>
+          <FormField label="Format"><FormSeg value={aud.format} onChange={v=>setAud({...aud,format:v})} options={['CSV','JSON']}/></FormField>
+        </FormRow>
+        <FormField label="Action type"><FormSelect value={aud.action} onChange={v=>setAud({...aud,action:v})}
+          options={[{v:'all',l:'All actions'},'transfer.approve','fee.distribute','bot.pause','api_key.rotate','investor.flag','fee_policy.edit']}/></FormField>
+      </FormModal>
     </>
   );
 }

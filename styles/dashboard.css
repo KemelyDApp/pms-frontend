@@ -50,6 +50,19 @@
 .dash-live .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pms-pos); box-shadow: 0 0 8px var(--pms-pos); animation: dash-pulse 1.6s ease-in-out infinite; }
 @keyframes dash-pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
+/* Glance cards — clickable overview blocks */
+.dash-row.glance > .dash-w, .dash-row.glance > * { flex: 1 1 220px; }
+.dash-glance { cursor: pointer; transition: border-color .12s, background .12s; }
+.dash-glance:hover { border-color: rgba(176,108,255,0.40); background: rgba(176,108,255,0.04); }
+.dash-glance-go { color: var(--fg-3); font-size: 14px; opacity: 0; transform: translateX(-4px); transition: opacity .15s, transform .15s; }
+.dash-glance:hover .dash-glance-go { opacity: 1; transform: translateX(0); color: var(--pms-accent); }
+.dash-glance-rows { margin-top: 8px; display: flex; flex-direction: column; }
+.dash-glance-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-top: 1px dashed var(--pms-divider); font-size: 11px; }
+.dash-glance-row .k { color: var(--fg-2); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dash-glance-row .v { color: var(--fg-1); font-weight: 600; }
+.dash-glance-row .x { color: var(--fg-3); font-size: 10px; }
+.dash-glance-row .dot { width: 7px; height: 7px; border-radius: 2px; flex: 0 0 7px; }
+
 /* Table quick-nav action button (header) */
 .dash-w-action {
   display: inline-flex; align-items: center; gap: 5px;

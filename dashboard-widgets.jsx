@@ -338,7 +338,7 @@ function DashSection({ id, num, title, purpose, tone, children, anchorRef }) {
 
 function DashCap({ children }) { return <div className="dash-cap">{children}</div>; }
 function DashStrip({ children }) { return <div className="dash-strip">{children}</div>; }
-function DashRow({ children }) { return <div className="dash-row">{children}</div>; }
+function DashRow({ children, glance }) { return <div className={`dash-row ${glance ? 'glance' : ''}`}>{children}</div>; }
 function DashFull({ children }) { return <div className="dash-full">{children}</div>; }
 
 // ─── Global controls bar ───────────────────────────────────────
@@ -353,10 +353,10 @@ function DashControls({ span, setSpan, compare, setCompare, lastUpdated, onRefre
           ))}
         </div>
       </div>
-      <label className="dash-compare">
+      {setCompare && <label className="dash-compare">
         <input type="checkbox" checked={compare} onChange={e => setCompare(e.target.checked)}/>
         Compare to previous period
-      </label>
+      </label>}
       <div className="dash-controls-fresh">
         <span className="dash-live"><span className="dot"></span>LIVE</span>
         <span className="pms-mono" title="Streaming over WebSocket">streaming · updated {lastUpdated}</span>

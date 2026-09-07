@@ -195,6 +195,7 @@ html, body {
 .pms-topbar-right { display: flex; align-items: center; gap: 8px; }
 .pms-pill-status {
   display: flex; align-items: center; gap: 8px;
+  white-space: nowrap; flex: 0 0 auto;
   height: 28px; padding: 0 10px;
   border-radius: 999px;
   font-size: 11px;
@@ -289,6 +290,11 @@ html, body {
 }
 .pms-notif-foot button:hover { background: rgba(255,255,255,0.08); color: var(--fg-1); }
 .pms-notif-foot button.primary { background: linear-gradient(180deg,#B06CFF,#870FFF); border: 0; color: #fff; }
+.pms-notif-more {
+  width: 100%; padding: 11px; background: none; border: 0; border-top: 1px solid var(--pms-divider);
+  color: var(--pms-accent); font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit;
+}
+.pms-notif-more:hover { background: rgba(176,108,255,0.06); }
 
 /* ───────────── Main area ───────────── */
 .pms-main {
@@ -2028,6 +2034,56 @@ tr:hover > td .pms-drill-arrow { opacity: 1; transform: translateX(0); }
 }
 .pms-modal-head h3 { margin: 0; font-size: 15px; font-weight: 700; }
 .pms-modal-body { padding: 18px 20px; }
+
+/* ───────────── Form toolkit ───────────── */
+.pms-form-sub { font-size: 12px; color: var(--fg-3); margin-bottom: 14px; line-height: 1.5; }
+.pms-form-body { display: flex; flex-direction: column; gap: 14px; }
+.pms-ff { display: flex; flex-direction: column; gap: 6px; }
+.pms-ff-label { font-size: 11px; font-weight: 600; color: var(--fg-2); text-transform: uppercase; letter-spacing: 0.06em; }
+.pms-ff-label .req { color: var(--pms-neg); margin-left: 3px; }
+.pms-ff-hint { font-size: 10px; color: var(--fg-3); }
+.pms-ff-err { font-size: 10px; color: var(--pms-neg); }
+.pms-ff-row { display: flex; gap: 12px; }
+.pms-ff-row > * { flex: 1; min-width: 0; }
+.pms-ff-input { display: flex; align-items: center; background: rgba(255,255,255,0.04); border: 1px solid var(--pms-divider); border-radius: 7px; overflow: hidden; }
+.pms-ff-input:focus-within { border-color: rgba(176,108,255,0.45); background: rgba(176,108,255,0.05); }
+.pms-ff-input input { flex: 1; min-width: 0; background: none; border: 0; outline: none; color: var(--fg-1); font-size: 13px; padding: 9px 11px; font-family: inherit; }
+.pms-ff-affix { padding: 0 10px; font-size: 12px; color: var(--fg-3); background: rgba(255,255,255,0.03); align-self: stretch; display: flex; align-items: center; }
+.pms-ff-affix.suf { border-left: 1px solid var(--pms-divider); }
+.pms-ff-input.has-prefix .pms-ff-affix:first-child { border-right: 1px solid var(--pms-divider); }
+.pms-ff-select { position: relative; }
+.pms-ff-select select {
+  width: 100%; appearance: none; background: rgba(255,255,255,0.04); border: 1px solid var(--pms-divider);
+  border-radius: 7px; color: var(--fg-1); font-size: 13px; padding: 9px 32px 9px 11px; font-family: inherit; cursor: pointer;
+}
+.pms-ff-select select:focus { outline: none; border-color: rgba(176,108,255,0.45); }
+.pms-ff-select .caret { position: absolute; right: 11px; top: 50%; transform: translateY(-50%); color: var(--fg-3); pointer-events: none; }
+.pms-ff-textarea {
+  width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--pms-divider); border-radius: 7px;
+  color: var(--fg-1); font-size: 13px; padding: 9px 11px; font-family: inherit; resize: vertical; outline: none;
+}
+.pms-ff-textarea:focus { border-color: rgba(176,108,255,0.45); }
+.pms-ff-seg { width: 100%; }
+.pms-ff-seg button { flex: 1; }
+
+/* Submitted state */
+.pms-form-done { text-align: center; padding: 28px 10px; }
+.pms-form-done .ic { width: 48px; height: 48px; border-radius: 50%; background: rgba(104,218,152,0.14); color: var(--pms-pos); display: grid; place-items: center; font-size: 24px; margin: 0 auto 12px; }
+.pms-form-done .t { font-size: 15px; font-weight: 700; color: var(--fg-1); }
+.pms-form-done .s { font-size: 12px; color: var(--fg-3); margin-top: 4px; }
+
+/* Confirm modal */
+.pms-confirm-banner { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 8px; font-size: 12px; line-height: 1.5; color: var(--fg-1); margin-bottom: 14px; }
+.pms-confirm-banner .ic { font-size: 16px; flex: 0 0 auto; }
+.pms-confirm-banner.danger { background: rgba(255,112,114,0.10); border: 1px solid rgba(255,112,114,0.28); }
+.pms-confirm-banner.danger .ic { color: var(--pms-neg); }
+.pms-confirm-banner.warn { background: rgba(255,155,79,0.10); border: 1px solid rgba(255,155,79,0.28); }
+.pms-confirm-banner.warn .ic { color: var(--pms-warn); }
+.pms-confirm-impact { background: rgba(255,255,255,0.03); border: 1px solid var(--pms-divider); border-radius: 8px; padding: 4px 12px; margin-bottom: 14px; }
+.pms-confirm-impact .row { display: flex; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--pms-divider); font-size: 12px; }
+.pms-confirm-impact .row:last-child { border-bottom: 0; }
+.pms-confirm-impact .k { color: var(--fg-3); }
+.pms-confirm-impact .v { color: var(--fg-1); font-weight: 600; font-family: var(--pms-mono); }
 .pms-modal-foot {
   padding: 14px 20px;
   border-top: 1px solid var(--pms-divider);

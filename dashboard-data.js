@@ -80,14 +80,26 @@
     // errors (last 1h, point-in-time) from BOT_ERRORS
     const botErrorsByType = (() => {
       const acc = {};
+      const sev = {};
       Object.values(window.BOT_ERRORS || {}).forEach(arr => arr.forEach(e => {
         acc[e.code] = (acc[e.code] || 0) + e.count;
+        sev[e.code] = e.severity || (e.code === 'INSUFFICIENT_MARGIN' ? 'high' : e.code === 'RATE_LIMIT' ? 'medium' : e.code === 'POSITION_LOCK_TIMEOUT' ? 'medium' : 'low');
       }));
+      const sevColor = { high: '#FF7072', medium: '#FF9B4F', low: '#4EB5FF' };
       const order = ['INSUFFICIENT_MARGIN', 'RATE_LIMIT', 'POSITION_LOCK_TIMEOUT', 'GAP_DETECTED'];
-      return order.map(code => ({ label: code, value: acc[code] || 0, prev: Math.round((acc[code] || 0) * (1 + biasedDelta(code, span, 30) / 100)) }));
+      return order.map(code => ({ label: code, value: acc[code] || 0, prev: Math.round((acc[code] || 0) * (1 + biasedDelta(code, span, 30) / 100)), color: sevColor[sev[code]] || '#4EB5FF', severity: sev[code] }));
     })();
     const botErrors1h = botErrorsByType.reduce((s, e) => s + e.value, 0);
     const botErrorsPrev = botErrorsByType.reduce((s, e) => s + e.prev, 0);
+
+    // critical errors grouped by originating service
+    const errorsByService = [
+      { label: 'Trading bots',      value: botErrors1h, prev: botErrorsPrev, color: '#FF7072' },
+      { label: 'Transfer service',  value: 3, prev: Math.round(3 * (1 + biasedDelta('svc-ts', span, 40) / 100)), color: '#FF9B4F' },
+      { label: 'XBridge connector', value: 6, prev: Math.round(6 * (1 + biasedDelta('svc-xb', span, 40) / 100)), color: '#FF9B4F' },
+      { label: 'Synapse',           value: 1, prev: 1, color: '#4EB5FF' },
+      { label: 'Backend',           value: 0, prev: 1, color: '#68DA98' },
+    ];
 
     // strategies in drawdown alert (>= 80% of limit)
     const ddLimit = { 1: -2, 2: -3, 3: -5 };
@@ -191,6 +203,7 @@
       ddLimitLabel: '−5.00%',
       botErrors1h: { value: botErrors1h, prev: botErrorsPrev, deltaAbs: botErrors1h - botErrorsPrev },
       botErrorsByType,
+      errorsByService,
       // monitoring
       totalAum: mk(navNow, ((navNow / navThen) - 1) * 100),
       navSeries, navPrevSeries,
