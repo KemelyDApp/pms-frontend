@@ -83,7 +83,7 @@ function AdminHub({ sub, setSub, can }) {
   ];
   return (
     <Hub tabs={tabs} sub={sub} setSub={setSub} can={can}>
-      {cur => cur === 'venues' ? <VenuesPage/> : cur === 'roles' ? <RolesPage/> : <AdminPage/>}
+      {cur => cur === 'venues' ? <VenuesPage/> : cur === 'roles' ? <RolesPage/> : <AdminPage can={can}/>}
     </Hub>
   );
 }
