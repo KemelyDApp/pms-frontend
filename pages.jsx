@@ -1481,92 +1481,70 @@ function AdminAuditTab() {
 }
 
 function AdminConfigTab() {
-  // Mirrors admin-panel › SystemConfigView.vue: every value lives in the backend `system_setting` table and is read by every service.
-  const DEFAULTS = {
-    withdrawal_approval_threshold: { v: 1000, label: 'Withdrawal approval threshold', unit: '$', pos: 'pre', min: 0, step: 100,
-      desc: 'Withdrawals above this amount require manual admin approval. Below it, transfers auto-execute after KYT.' },
-    operational_currency: { v: 'USD', label: 'Operational currency', text: true, upper: true,
-      desc: 'Base currency for mark-to-market valuations across the platform (e.g. USD, USDT).' },
-    amount_decimals: { v: 4, label: 'Amount decimals (rounding)', min: 0, max: 18, step: 1, unit: 'dp', pos: 'post',
-      desc: 'Decimal places used when rounding monetary amounts system-wide — balances, fees, hurdle, P&L.' },
-    exchange_sync_interval_hours: { v: 360, label: 'Exchange sync interval', unit: 'minutes', pos: 'post', min: 5, max: 10080, step: 5,
-      desc: 'How often the transfer-service syncs networks, tokens and sub-accounts from Binance / OKX. Stored as hours; takes effect on the next cycle — no restart.' },
-    data_retention_days: { v: 30, label: 'Tick data retention', unit: 'days', pos: 'post', min: 7, max: 365, step: 1,
-      desc: 'Days of trade-tick and order-book data kept in TimescaleDB. Older data is pruned automatically — affects backtesting availability.' },
-    whitelist_cooldown_hours: { v: 48, label: 'Wallet whitelist cool-down', unit: 'hours', pos: 'post', min: 0, max: 168, step: 1,
-      desc: 'Hours a newly whitelisted wallet waits before it can receive withdrawals. Deposits and trading are allowed during the cool-down.' },
-    kyc_review_interval_months: { v: 12, label: 'KYC re-review interval', unit: 'months', pos: 'post', min: 1, max: 60, step: 1,
-      desc: 'Every Organization is re-reviewed this often. Due cases appear in Organizations › Re-KYC 30 days before the date.' },
-  };
+  const CFG = [
+    { group:'Risk limits', rows: [
+      { k:'Drawdown notify threshold', v:'−2.00%', edit:true },
+      { k:'Hard liquidation drawdown', v:'−5.00%', edit:true },
+      { k:'KYT score block threshold', v:'30', edit:true },
+    ]},
+    { group:'Transfer policy', rows: [
+      { k:'On-chain auto threshold', v:'$1,000', edit:true },
+      { k:'M-of-N approval above', v:'$1,000', edit:true },
+      { k:'KYT provider', v:'Chainalysis · primary', edit:false },
+      { k:'Provider lock duration', v:'24h after deposit credit', edit:false },
+    ]},
+    { group:'Fee defaults', rows: [
+      { k:'Default mgmt fee', v:'2.00% / yr', edit:true },
+      { k:'Default perf fee', v:'20.00% above HWM', edit:true },
+      { k:'Hurdle rate', v:'4.00% / yr', edit:true },
+      { k:'Crystallisation', v:'Monthly · last business day', edit:false },
+    ]},
+    { group:'Integrations', rows: [
+      { k:'Custody', v:'Fireblocks · Mainnet Vault', edit:false },
+      { k:'Accounting', v:'Lukka · daily push 23:55 UTC', edit:false },
+      { k:'KYC', v:'Sumsub · investor & UBO', edit:false },
+    ]},
+    { group:'Organizations · KYC & wallets', rows: [
+      { k:'Wallet whitelist cool-down', v:'48h before withdrawals', edit:true },
+      { k:'KYC re-review interval', v:'12 months', edit:true },
+    ]},
+  ];
+  // Per-risk-tier limits — read by Organizations › profile (page-orgs.jsx · kycTierLimits)
   const TIERS = [['low', 'Low'], ['medium', 'Medium'], ['high', 'High']];
   const [tl, setTl] = React.useState(() => { try { return JSON.parse(localStorage.getItem('pms.tierLimits') || '{}'); } catch (e) { return {}; } });
   const [tlSaved, setTlSaved] = React.useState(false);
   const setT = (tier, k, v) => { setTl({ ...tl, [tier]: { ...(tl[tier] || {}), [k]: v.replace(/[^0-9]/g, '') } }); setTlSaved(false); };
   const saveTl = () => { try { localStorage.setItem('pms.tierLimits', JSON.stringify(tl)); } catch (e) {} setTlSaved(true); setTimeout(() => setTlSaved(false), 2000); };
-  const [vals, setVals] = React.useState(() => { try { return { ...Object.fromEntries(Object.entries(DEFAULTS).map(([k, d]) => [k, d.v])), ...JSON.parse(localStorage.getItem('pms.syscfg') || '{}') }; } catch (e) { return Object.fromEntries(Object.entries(DEFAULTS).map(([k, d]) => [k, d.v])); } });
-  const [draft, setDraft] = React.useState(vals);
-  const [saved, setSaved] = React.useState(null);
-  const dirty = k => String(draft[k]) !== String(vals[k]);
-  const save = k => {
-    let v = draft[k]; const d = DEFAULTS[k];
-    if (d.text) v = String(v).trim().toUpperCase(); else { v = Number(v); if (isNaN(v)) return; if (d.min != null) v = Math.max(d.min, v); if (d.max != null) v = Math.min(d.max, v); }
-    const next = { ...vals, [k]: v }; setVals(next); setDraft({ ...draft, [k]: v });
-    try { localStorage.setItem('pms.syscfg', JSON.stringify(next)); } catch (e) {}
-    setSaved(k); setTimeout(() => setSaved(s => s === k ? null : s), 2000);
-  };
-  const [feeEx, setFeeEx] = React.useState('Binance');
-  const FEES = {
-    Binance: [{ chain: 'ETH', fee: 1.20, cur: 'USDT', min: 10, eta: 5 }, { chain: 'TRX', fee: 1.00, cur: 'USDT', min: 10, eta: 2 }, { chain: 'BSC', fee: 0.29, cur: 'USDT', min: 10, eta: 3 }, { chain: 'SOL', fee: 1.00, cur: 'USDC', min: 10, eta: 1 }, { chain: 'ARB', fee: 0.10, cur: 'USDC', min: 10, eta: 4 }],
-    OKX: [{ chain: 'ETH', fee: 2.10, cur: 'USDT', min: 2, eta: 6 }, { chain: 'TRX', fee: 0.80, cur: 'USDT', min: 2, eta: 2 }, { chain: 'ARB', fee: 0.10, cur: 'USDT', min: 1, eta: 5 }, { chain: 'SOL', fee: 0.80, cur: 'USDC', min: 1, eta: 1 }, { chain: 'OP', fee: 0.10, cur: 'USDC', min: 1, eta: 5 }],
-  };
   return (
     <>
-      <div className="pms-card" style={{ marginBottom: 12 }}>
-        <div className="pms-card-head">System configuration<div className="label-meta">stored in <span className="pms-mono">system_setting</span> · read by every service · edits write to the audit log</div></div>
-        <div className="pms-card-body" style={{ padding: 0 }}>
-          {Object.entries(DEFAULTS).map(([k, d]) => (
-            <div className="pms-cfg-row cfg-edit" key={k}>
-              <div className="k"><b>{d.label}</b><span className="pms-mono">{k}</span><div className="d">{d.desc}</div></div>
-              <div className="v">
-                <div className={`pms-ff-input ${d.pos === 'pre' ? 'has-prefix' : d.unit ? 'has-suffix' : ''}`} style={{ width: d.text ? 120 : 170 }}>
-                  {d.pos === 'pre' && <span className="pms-ff-affix">{d.unit}</span>}
-                  <input className={d.text ? '' : 'pms-mono'} type={d.text ? 'text' : 'number'} min={d.min} max={d.max} step={d.step} value={draft[k]}
-                    style={d.upper ? { textTransform: 'uppercase' } : null}
-                    onChange={e => setDraft({ ...draft, [k]: e.target.value })} onKeyDown={e => e.key === 'Enter' && dirty(k) && save(k)}/>
-                  {d.pos === 'post' && <span className="pms-ff-affix suf">{d.unit}</span>}
-                </div>
+    <div className="pms-card" style={{ marginBottom: 12 }}>
+      <div className="pms-card-head">Configuration<div className="label-meta">edits write to audit log</div></div>
+      <div className="pms-card-body" style={{padding:0}}>
+        {CFG.map(g => (
+          <div key={g.group} className="pms-cfg-group">
+            <div className="pms-cfg-group-head">{g.group}</div>
+            {g.rows.map(r => (
+              <div className="pms-cfg-row" key={r.k}>
+                <div className="k">{r.k}</div>
+                <div className="v pms-mono">{r.v}</div>
+                <div className="act">{r.edit ? <button className="pms-btn ghost text-xs">Edit</button> : <span className="muted text-xs">read-only</span>}</div>
               </div>
-              <div className="act">
-                {saved === k ? <span className="pms-pos text-xs strong">Saved</span>
-                  : <button className={`pms-btn ${dirty(k) ? 'primary' : 'ghost'} text-xs`} disabled={!dirty(k)} onClick={() => save(k)}>Save</button>}
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ))}
       </div>
-      <div className="pms-card" style={{ marginBottom: 12 }}>
-        <div className="pms-card-head">Risk-tier limits<div className="label-meta">per Organization · set by the KYC risk tier · leave blank for no limit</div><span className="spacer"></span>
-          {tlSaved ? <span className="pms-pos text-xs strong">Saved</span> : <button className="pms-btn primary text-xs" onClick={saveTl}>Save limits</button>}</div>
-        <div className="pms-card-body flush">
-          <table className="pms-table kyc-limits">
-            <thead><tr><th>Risk tier</th><th className="num">Deposits / month</th><th className="num">Withdrawals / month</th></tr></thead>
-            <tbody>{TIERS.map(([k, l]) => <tr key={k}><td><span className={`pms-pill ${k === 'low' ? 'pos' : k === 'medium' ? 'warn' : 'neg'}`}>{l}</span></td>
-              {['dep', 'wd'].map(f => <td key={f} className="num"><div className="pms-ff-input has-prefix"><span className="pms-ff-affix">$</span><input className="pms-mono" value={tl[k]?.[f] || ''} placeholder="No limit" onChange={e => setT(k, f, e.target.value)}/></div></td>)}</tr>)}</tbody>
-          </table>
-        </div>
+    </div>
+    <div className="pms-card">
+      <div className="pms-card-head">Risk-tier limits<div className="label-meta">per Organization · set by the KYC risk tier · leave blank for no limit</div><span className="spacer"></span>
+        {tlSaved ? <span className="pms-pos text-xs strong">Saved</span> : <button className="pms-btn primary text-xs" onClick={saveTl}>Save limits</button>}</div>
+      <div className="pms-card-body flush">
+        <table className="pms-table kyc-limits">
+          <thead><tr><th>Risk tier</th><th className="num">Deposits / month</th><th className="num">Withdrawals / month</th></tr></thead>
+          <tbody>{TIERS.map(([k, l]) => <tr key={k}><td><span className={`pms-pill ${k === 'low' ? 'pos' : k === 'medium' ? 'warn' : 'neg'}`}>{l}</span></td>
+            {['dep', 'wd'].map(f => <td key={f} className="num"><div className="pms-ff-input has-prefix"><span className="pms-ff-affix">$</span><input className="pms-mono" value={tl[k]?.[f] || ''} placeholder="No limit" onChange={e => setT(k, f, e.target.value)}/></div></td>)}</tr>)}</tbody>
+        </table>
       </div>
-      <div className="pms-card">
-        <div className="pms-card-head">CEX withdrawal fees<div className="label-meta">live from exchanges · read-only</div>
-          <span className="spacer"></span>
-          <div className="pms-seg">{['Binance', 'OKX'].map(x => <button key={x} className={feeEx === x ? 'active' : ''} onClick={() => setFeeEx(x)}>{x}</button>)}</div>
-        </div>
-        <div className="pms-card-body flush">
-          <table className="pms-table">
-            <thead><tr><th>Chain</th><th className="num">Fee</th><th className="num">Min withdrawal</th><th className="num">Est. arrival</th></tr></thead>
-            <tbody>{FEES[feeEx].map(f => <tr key={f.chain}><td><span className="pms-pill">{f.chain}</span></td><td className="num pms-mono">{f.fee.toFixed(2)} {f.cur}</td><td className="num pms-mono">${f.min}</td><td className="num pms-mono muted">~{f.eta} min</td></tr>)}</tbody>
-          </table>
-        </div>
-      </div>
+    </div>
     </>
   );
 }

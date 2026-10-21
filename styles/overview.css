@@ -7,11 +7,9 @@
 /* head */
 .ov-head { display: flex; align-items: flex-end; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
 .ov-head h1 { margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em; color: var(--fg-1); }
-.ov-head > div:first-child { flex: 1 1 auto; min-width: 0; }
-.ov-head .sub { font-size: 12px; color: var(--fg-3); margin-top: 4px; display: block; line-height: 1.7; }
-.ov-head .sub .ovb-time { vertical-align: middle; margin: 0 2px; }
+.ov-head .sub { font-size: 12px; color: var(--fg-3); margin-top: 4px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
 .ov-head .spacer { flex: 1 1 auto; }
-.ov-time-hint { display: inline; white-space: normal; }
+.ov-time-hint { display: inline-flex; align-items: center; gap: 4px; }
 .ov-span { display: inline-flex; background: rgba(255,255,255,0.04); border: 1px solid var(--pms-divider); border-radius: 8px; padding: 2px; }
 .ov-span button { background: none; border: 0; color: var(--fg-3); font-family: inherit; font-size: 11px; font-weight: 700; padding: 6px 13px; border-radius: 6px; cursor: pointer; letter-spacing: 0.04em; }
 .ov-span button:hover { color: var(--fg-1); }
@@ -36,15 +34,12 @@
 .ovb.strip .ovl-r { flex: 1 1 170px; border-top: 0; padding: 6px 0; }
 .ovb.strip .ovbars { flex: 1; justify-content: center; }
 .ovb.strip .ovb-b > .ovp-mini { flex: 0 0 auto; align-self: center; flex-direction: column; gap: 6px; }
-/* wide (2-cell) auto-layout: KPI column left, lines fill the full height in one column — same rhythm as neighbours */
+/* wide (2-cell) auto-layout: KPI left, lines as two tidy centered columns — no stretched row gaps */
 .ovb.wide:not(:has(.ovp)) .ovb-b { flex-direction: row; align-items: stretch; gap: 24px; }
-.ovb.wide:not(:has(.ovp)) .ovb-b > .ovk, .ovb.wide:not(:has(.ovp)) .ovb-b > .ovk-stack { flex: 0 0 210px; padding-right: 20px; border-right: 1px solid var(--pms-divider); }
-.ovk-stack { display: flex; flex-direction: column; justify-content: space-between; gap: 14px; }
-.ovb:not(.wide) .ovk-stack, .ovb.strip .ovk-stack { flex-direction: row; flex-wrap: wrap; gap: 10px 22px; }
-.ovb.strip .ovb-b > .ovk-stack { border-right: 0; padding-right: 0; }
-.ovb.wide:not(:has(.ovp)) .ovl { flex: 1; display: flex; flex-direction: column; justify-content: space-between; margin-top: 0; }
-.ovb.wide:not(:has(.ovp)) .ovl-r { padding: 7px 0; }
-.ovb.wide:not(:has(.ovp)) .ovl-r:first-child { border-top: 0; }
+.ovb.wide:not(:has(.ovp)) .ovb-b > .ovk { flex: 0 0 210px; padding-right: 20px; border-right: 1px solid var(--pms-divider); display: flex; flex-direction: column; justify-content: center; }
+.ovb.wide:not(:has(.ovp)) .ovl { flex: 1; display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; row-gap: 0; align-content: center; margin-top: 0; }
+.ovb.wide:not(:has(.ovp)) .ovl-r { padding: 8px 0; }
+.ovb.wide:not(:has(.ovp)) .ovl-r:nth-child(2) { border-top: 0; }
 
 /* block */
 .ovb {
@@ -72,8 +67,6 @@
 .ovk-row { display: flex; align-items: baseline; gap: 10px; margin-top: 3px; flex-wrap: wrap; }
 .ovk-v { font-size: 26px; font-weight: 700; letter-spacing: -0.025em; color: var(--fg-1); line-height: 1.05; font-variant-numeric: tabular-nums; }
 .ovk.sm .ovk-v { font-size: 22px; }
-.ovk-v.warn { color: var(--pms-warn); }
-.ovk-sub { font-size: 10.5px; color: var(--fg-3); }
 .ovk-v.pos { color: var(--pms-pos); } .ovk-v.neg { color: var(--pms-neg); }
 .ovk-d { font-size: 11px; font-weight: 700; font-family: var(--pms-mono); }
 
@@ -102,9 +95,8 @@
 .ovp { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 16px; align-items: stretch; flex: 1; }
 @media (max-width: 900px) { .ovp { grid-template-columns: minmax(0, 1fr); } }
 .ovp-k { display: flex; flex-direction: column; gap: 12px; }
-.ovp-mini { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 12px; font-size: 10.5px; color: var(--fg-3); }
-.ovp-mini > span { display: flex; flex-direction: column; gap: 2px; min-width: 0; line-height: 1.25; }
-.ovp-mini b { display: block; color: var(--fg-1); font-weight: 600; font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ovp-mini { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 11px; color: var(--fg-3); }
+.ovp-mini b { color: var(--fg-1); font-weight: 600; font-variant-numeric: tabular-nums; }
 .ovp-c { display: flex; flex-direction: column; min-width: 0; cursor: default; }
 .ovp-ct { display: flex; align-items: center; gap: 2px; margin-bottom: 6px; }
 .ovp-ct button { background: none; border: 1px solid transparent; color: var(--fg-3); font-family: inherit; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 5px; cursor: pointer; }

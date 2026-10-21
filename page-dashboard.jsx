@@ -32,7 +32,7 @@ function OvBlock({ icon, title, dest, time, span, onOpen, layout = 1, tone, chil
   );
 }
 
-function OvKpi({ label, value, tone, delta, deltaAbs, good = 'up', small, sub }) {
+function OvKpi({ label, value, tone, delta, deltaAbs, good = 'up', small }) {
   const showAbs = deltaAbs != null;
   return (
     <div className={`ovk ${small ? 'sm' : ''}`}>
@@ -42,7 +42,6 @@ function OvKpi({ label, value, tone, delta, deltaAbs, good = 'up', small, sub })
         {showAbs
           ? <span className={`ovk-d ${deltaAbs >= 0 ? 'pms-pos' : 'pms-neg'}`}>{fmt.signedUsd(deltaAbs, { compact: true })}</span>
           : delta != null && isFinite(delta) ? <TrendChip delta={delta} good={good}/> : null}
-        {sub && <span className="ovk-sub">{sub}</span>}
       </div>
     </div>
   );
@@ -287,17 +286,13 @@ function DashboardPage({ onOpenPool, onNav, can, roleId }) {
 
   if (can('admin')) blocks.push({ base: 1, render: L => (
     <OvBlock key="admin" icon="key" title="Admin" dest="Admin" layout={L} onOpen={go('admin', 'admin')} tone={m.servicesDegraded.value ? 'warn' : undefined}>
-      <div className="ovk-stack">
-        <OvKpi small label="Services degraded" value={m.servicesDegraded.value} tone={m.servicesDegraded.value ? 'neg' : 'pos'}/>
-        <OvKpi small label="API keys to rotate" value={keysAtt} tone={keysAtt ? 'warn' : undefined}/>
-        <OvKpi small label="Privileged actions · 24h" value={window.PRIVILEGED_ACTIONS_24H?.count ?? 0} sub={`${window.PRIVILEGED_ACTIONS_24H?.anomalies ?? 0} anomalies`}/>
-      </div>
+      <OvKpi small label="Services degraded" value={m.servicesDegraded.value} tone={m.servicesDegraded.value ? 'neg' : 'pos'}/>
       <OvLines rows={[
+        { k: 'API keys to rotate', v: keysAtt, vc: keysAtt ? 'var(--pms-warn)' : undefined },
         { k: 'Venues degraded', v: m.venuesDegraded.value },
         { k: 'Active sagas', sub: `${m.sagasInError.value} in error`, v: m.activeSagas.value },
-        { k: 'Team members', sub: `${Object.keys(window.pmsRoles ? window.pmsRoles() : {}).length} roles`, v: (window.USERS || []).length },
-        { k: 'Audit events today', v: (window.PRIVILEGED_EVENTS || []).length || 8 },
-        { k: 'SLA compliance', sub: '30d rolling', v: m.slaCompliance.value.toFixed(1) + '%' },
+        { k: 'Team members', sub: `${Object.keys(window.PMS_ROLES || {}).length} roles`, v: (window.USERS || []).length },
+        { k: 'Privileged actions · 24h', sub: `${window.PRIVILEGED_ACTIONS_24H?.anomalies ?? 0} anomalies`, v: window.PRIVILEGED_ACTIONS_24H?.count ?? 0 },
         { k: 'Reports ready', v: m.reportsReady.value },
       ]}/>
     </OvBlock>
