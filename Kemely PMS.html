@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="styles/dashboard.css"/>
   <link rel="stylesheet" href="styles/overview.css"/>
   <link rel="stylesheet" href="styles/repo-features.css"/>
+  <link rel="stylesheet" href="styles/kyc.css"/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -30,6 +31,7 @@
   <script src="permissions.js"></script>
   <script src="data-v2.js"></script>
   <script src="dashboard-data.js"></script>
+  <script src="data-kyc.js"></script>
   <script type="text/babel" src="components.jsx"></script>
   <script type="text/babel" src="forms.jsx"></script>
   <script type="text/babel" src="sidebar.jsx"></script>
@@ -43,6 +45,8 @@
   <script type="text/babel" src="page-tradesim.jsx"></script>
   <script type="text/babel" src="page-roles-login.jsx"></script>
   <script type="text/babel" src="pages-hub.jsx"></script>
+  <script type="text/babel" src="page-orgs.jsx"></script>
+  <script type="text/babel" src="page-kyc-queues.jsx"></script>
   <script type="text/babel" src="tweaks-panel.jsx"></script>
   <script type="text/babel">
     function App() {
@@ -71,7 +75,7 @@
       React.useEffect(() => { if (!can(NAV_SCOPE[active])) { setActive('overview'); setSub(null); setPoolId(null); } }, [roleId, rolesNonce]);
 
       const labels = {
-        overview:'Overview', strategies:'Strategies', tradesim:'TradeSim Hub', trading:'Trading', investors:'Investors',
+        overview:'Overview', strategies:'Strategies', tradesim:'TradeSim Hub', trading:'Trading', investors:'Organizations',
         fundflow:'Fund flow', recon:'Reconciliation', finance:'Finance', admin:'Admin',
       };
       const SUB_LABELS = {
@@ -88,7 +92,7 @@
         strategies: <StrategiesHub sub={sub} setSub={setSub} can={can} poolId={poolId} setPoolId={setPoolId}/>,
         tradesim: <TradeSimPage/>,
         trading: <TradingHub sub={sub} setSub={setSub} can={can} ccy={ccy}/>,
-        investors: <InvestorsPage/>,
+        investors: <OrgsHub sub={sub} setSub={setSub} can={can}/>,
         fundflow: <FundFlowHub sub={sub} setSub={setSub} can={can}/>,
         recon: <ReconPage/>,
         finance: <FinanceHub sub={sub} setSub={setSub} can={can}/>,

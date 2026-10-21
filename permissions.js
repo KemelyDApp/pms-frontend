@@ -6,7 +6,7 @@ const PMS_DEFAULT_ROLES = {
   admin:      { label: 'Admin',              short: 'ADM', scopes: '*', locked: true },
   pm:         { label: 'Portfolio manager',  short: 'PM',  scopes: ['strategies', 'research', 'trading', 'fundflow', 'investors', 'recon', 'finance'] },
   ops:        { label: 'Operations',         short: 'OPS', scopes: ['strategies', 'research', 'trading', 'fundflow', 'fundflow.approve', 'recon', 'admin.health'] },
-  compliance: { label: 'Compliance',         short: 'CMP', scopes: ['investors', 'fundflow', 'fundflow.approve', 'recon', 'admin.audit'] },
+  compliance: { label: 'Compliance',         short: 'CMP', scopes: ['investors', 'kyc.approve', 'fundflow', 'fundflow.approve', 'recon', 'admin.audit'] },
   ir:         { label: 'Investor relations', short: 'IR',  scopes: ['investors', 'fundflow'] },
 };
 // Scope catalogue — what each scope unlocks (tabs · sub-tabs · overview blocks)
@@ -14,7 +14,8 @@ const PMS_SCOPES = [
   { id: 'strategies',       label: 'Strategies & bots',      unlocks: { tabs: ['Strategies'], subs: ['Strategies', 'Bots & sagas', 'Create strategy'], blocks: ['Performance', 'Strategies'] } },
   { id: 'research',         label: 'TradeSim research',      unlocks: { tabs: ['TradeSim Hub'], blocks: ['TradeSim Hub'] } },
   { id: 'trading',          label: 'Trading desk',           unlocks: { tabs: ['Trading'], subs: ['Positions', 'Orders & executions', 'P&L attribution'], blocks: ['Trading'] } },
-  { id: 'investors',        label: 'Investors',              unlocks: { tabs: ['Investors'], blocks: ['Investors'] } },
+  { id: 'investors',        label: 'Organizations (view)',   unlocks: { tabs: ['Organizations'], subs: ['Organizations', 'Quarantine'], blocks: ['Organizations'] } },
+  { id: 'kyc.approve',      label: 'Review KYC & whitelist wallets', unlocks: { subs: ['KYC review', 'Wallet whitelisting'], blocks: ['Needs attention › KYC'] } },
   { id: 'fundflow',         label: 'Fund flow (view)',       unlocks: { tabs: ['Fund flow'], subs: ['Deposits & withdrawals'], blocks: ['Fund flow'] } },
   { id: 'fundflow.approve', label: 'Approve withdrawals & transfers', unlocks: { subs: ['Fund flow › Approvals'], blocks: ['Needs attention › withdrawals', 'Fund flow › awaiting approval'] } },
   { id: 'recon',            label: 'Reconciliation',         unlocks: { tabs: ['Reconciliation'], blocks: ['Reconciliation'] } },

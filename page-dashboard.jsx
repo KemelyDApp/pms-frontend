@@ -32,7 +32,7 @@ function OvBlock({ icon, title, dest, time, span, onOpen, layout = 1, tone, chil
   );
 }
 
-function OvKpi({ label, value, tone, delta, deltaAbs, good = 'up', small }) {
+function OvKpi({ label, value, tone, delta, deltaAbs, good = 'up', small, sub }) {
   const showAbs = deltaAbs != null;
   return (
     <div className={`ovk ${small ? 'sm' : ''}`}>
@@ -42,6 +42,7 @@ function OvKpi({ label, value, tone, delta, deltaAbs, good = 'up', small }) {
         {showAbs
           ? <span className={`ovk-d ${deltaAbs >= 0 ? 'pms-pos' : 'pms-neg'}`}>{fmt.signedUsd(deltaAbs, { compact: true })}</span>
           : delta != null && isFinite(delta) ? <TrendChip delta={delta} good={good}/> : null}
+        {sub && <span className="ovk-sub">{sub}</span>}
       </div>
     </div>
   );
@@ -119,6 +120,9 @@ function DashboardPage({ onOpenPool, onNav, can, roleId }) {
 
   const POOLS_ = window.POOLS || [];
   const INV = window.INVESTORS || [];
+  const KO = window.KYC_ORGS || [], KW = window.KYC_WALLETS || [];
+  const kycQueue = KO.filter(o => ['submitted', 'in_review', 'second_approval'].includes(o.status)).length;
+  const KQ = (window.KYC_QUARANTINE || []).filter(q => q.status !== 'returned').length;
   const fi = window.FUND_INTENTS || [];
   const reconAll = window.RECON_BREAKS_FULL || window.RECON_BREAKS || [];
   const sevN = s => reconAll.filter(r => r.severity === s).length;
@@ -142,7 +146,8 @@ function DashboardPage({ onOpenPool, onNav, can, roleId }) {
     pendW.length > 0 && can('fundflow.approve') && { tone: 'warn', n: pendW.length, k: 'Withdrawals awaiting approval', s: fmt.usd(pendW.reduce((a, w) => a + w.amount, 0), { compact: true }), nav: ['fundflow', 'approvals'] },
     errsTotal > 0 && can('admin.health') && { tone: 'warn', n: errsTotal, k: 'Service errors · 1h', s: errs.filter(e => e.value).map(e => e.label).join(', '), nav: ['admin', 'admin'] },
     keysAtt > 0 && can('admin') && { tone: 'info', n: keysAtt, k: 'API keys need rotation', s: 'past policy', nav: ['admin', 'admin'] },
-    (m.investorsFlagged?.value ?? 0) > 0 && can('investors') && { tone: 'info', n: m.investorsFlagged.value, k: 'Investors with compliance flags', s: 'KYT / KYC review', nav: ['investors'] },
+    kycQueue > 0 && can('kyc.approve') && { tone: 'warn', n: kycQueue, k: 'KYC cases to review', s: 'Organizations › KYC review', nav: ['investors', 'review'] },
+    KQ > 0 && can('investors') && { tone: 'info', n: KQ, k: 'Quarantined deposits', s: 'sender not whitelisted', nav: ['investors', 'quarantine'] },
   ].filter(Boolean);
 
   const roleLbl = (window.PMS_ROLES?.[roleId] || {}).label;
@@ -244,14 +249,15 @@ function DashboardPage({ onOpenPool, onNav, can, roleId }) {
   )});
 
   if (can('investors')) blocks.push({ base: 1, render: L => (
-    <OvBlock key="inv" icon="users" title="Investors" dest="Investors" layout={L} onOpen={go('investors')}>
-      <OvKpi small label="Active investors" value={(window.PORTFOLIO_TOTAL?.clients ?? INV.length).toLocaleString()} delta={m.totalInvestors.deltaPct}/>
+    <OvBlock key="inv" icon="users" title="Organizations" dest="Organizations" layout={L} onOpen={go('investors')}>
+      <OvKpi small label="KYC approved" value={<>{KO.filter(o => o.status === 'approved').length}<span style={{ color: 'var(--fg-3)', fontSize: '0.6em' }}> / {KO.length}</span></>}/>
       <OvLines rows={[
         { k: 'Combined balance', v: fmt.usd(INV.reduce((s, i) => s + i.balance, 0), { compact: true }) },
-        { k: 'Withdrawable now', v: fmt.usd(INV.reduce((s, i) => s + i.withdrawable, 0), { compact: true }), vc: 'var(--pms-pos)' },
-        { k: 'Locked', v: fmt.usd(INV.reduce((s, i) => s + i.locked, 0), { compact: true }) },
-        { k: 'Below high-water mark', v: m.investorsBelowHwm.value },
-        { k: 'Compliance flags', v: m.investorsFlagged.value, vc: m.investorsFlagged.value ? 'var(--pms-warn)' : undefined },
+        { k: 'KYC to review', sub: `${KO.filter(o => o.status === 'second_approval').length} need 2nd approval`, v: kycQueue, vc: kycQueue ? 'var(--pms-warn)' : undefined },
+        { k: 'Waiting on client', v: KO.filter(o => ['draft', 'info_requested'].includes(o.status)).length },
+        { k: 'Wallets whitelisted', sub: `${KW.filter(w => ['awaiting_email', 'awaiting_connect', 'review', 'cooldown'].includes(w.status)).length} in progress`, v: KW.filter(w => w.status === 'active').length },
+        { k: 'Quarantined deposits', v: KQ, vc: KQ ? 'var(--pms-warn)' : undefined },
+        { k: 'Re-KYC due ≤ 30d', v: KO.filter(o => o.status === 'approved' && o.nextReview && (new Date(o.nextReview) - new Date('2026-10-21')) / 864e5 <= 30).length },
       ]}/>
     </OvBlock>
   )});
@@ -281,13 +287,17 @@ function DashboardPage({ onOpenPool, onNav, can, roleId }) {
 
   if (can('admin')) blocks.push({ base: 1, render: L => (
     <OvBlock key="admin" icon="key" title="Admin" dest="Admin" layout={L} onOpen={go('admin', 'admin')} tone={m.servicesDegraded.value ? 'warn' : undefined}>
-      <OvKpi small label="Services degraded" value={m.servicesDegraded.value} tone={m.servicesDegraded.value ? 'neg' : 'pos'}/>
+      <div className="ovk-stack">
+        <OvKpi small label="Services degraded" value={m.servicesDegraded.value} tone={m.servicesDegraded.value ? 'neg' : 'pos'}/>
+        <OvKpi small label="API keys to rotate" value={keysAtt} tone={keysAtt ? 'warn' : undefined}/>
+        <OvKpi small label="Privileged actions · 24h" value={window.PRIVILEGED_ACTIONS_24H?.count ?? 0} sub={`${window.PRIVILEGED_ACTIONS_24H?.anomalies ?? 0} anomalies`}/>
+      </div>
       <OvLines rows={[
-        { k: 'API keys to rotate', v: keysAtt, vc: keysAtt ? 'var(--pms-warn)' : undefined },
         { k: 'Venues degraded', v: m.venuesDegraded.value },
         { k: 'Active sagas', sub: `${m.sagasInError.value} in error`, v: m.activeSagas.value },
-        { k: 'Team members', sub: `${Object.keys(window.PMS_ROLES || {}).length} roles`, v: (window.USERS || []).length },
-        { k: 'Privileged actions · 24h', sub: `${window.PRIVILEGED_ACTIONS_24H?.anomalies ?? 0} anomalies`, v: window.PRIVILEGED_ACTIONS_24H?.count ?? 0 },
+        { k: 'Team members', sub: `${Object.keys(window.pmsRoles ? window.pmsRoles() : {}).length} roles`, v: (window.USERS || []).length },
+        { k: 'Audit events today', v: (window.PRIVILEGED_EVENTS || []).length || 8 },
+        { k: 'SLA compliance', sub: '30d rolling', v: m.slaCompliance.value.toFixed(1) + '%' },
         { k: 'Reports ready', v: m.reportsReady.value },
       ]}/>
     </OvBlock>

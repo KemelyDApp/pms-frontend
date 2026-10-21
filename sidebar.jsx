@@ -6,7 +6,7 @@ const NAV = [
     { id: "strategies", label: "Strategies",      icon: "layers", scope: "strategies" },
     { id: "tradesim",   label: "TradeSim Hub",    icon: "bolt",   scope: "research" },
     { id: "trading",    label: "Trading",         icon: "list",   scope: "trading", badge: { v: "LIVE", kind: "info" } },
-    { id: "investors",  label: "Investors",       icon: "users",  scope: "investors" },
+    { id: "investors",  label: "Organizations",   icon: "users",  scope: "investors", badgeFn: (can) => { if (can && !can('kyc.approve')) return null; const n = (window.KYC_ORGS || []).filter(o => ['submitted', 'in_review', 'second_approval'].includes(o.status)).length; return n ? { v: n, kind: 'warn' } : null; } },
     { id: "fundflow",   label: "Fund flow",       icon: "flow",   scope: "fundflow", badgeFn: (can) => { if (can && !can('fundflow.approve')) return null; const n = (window.FUND_INTENTS || []).filter(i => i.dir === 'withdraw' && (i.stage === 'W2_APPROVAL' || i.stage === 'W4_PROVIDER_CHECK')).length; return n ? { v: String(n), kind: 'warn' } : null; } },
   ]},
   { group: "Control", items: [
@@ -110,6 +110,8 @@ function TopBar({ crumbs, ccy, setCcy, onToggleSidebar, onNav, roleId, setRoleId
   const role = ROLES[roleId] || ROLES.admin;
   const NOTIFS = [
     { id:'n1', cat:'critical', icon:'⚠', title:'Drawdown limit breach', body:'prop-bot-01 at −4.18% / −5.00% cap · strategy paused', time:'2m ago', nav:'strategies', sub:'list' },
+    { id:'k1', cat:'action',   icon:'✋', title:'KYC case needs 2nd approval', body:'Quill & Stark LLP · high risk · 1st approval by Sarah Okafor', time:'3m ago', nav:'investors', sub:'review' },
+    { id:'k2', cat:'action',   icon:'✋', title:'Deposit quarantined', body:'$250K USDC from a non-whitelisted wallet → Stratton Capital · whitelisting started', time:'5m ago', nav:'investors', sub:'quarantine' },
     { id:'n2', cat:'action',   icon:'✋', title:'Withdrawal needs approval', body:'INV-1842 · $124K USDC · audit passed', time:'4m ago', nav:'fundflow', sub:'approvals' },
     { id:'n3', cat:'critical', icon:'⚠', title:'Reconciliation FAIL', body:'Balance drift pool 1 / Binance · 93.15 USDT missing', time:'6m ago', nav:'recon' },
     { id:'n4', cat:'action',   icon:'✋', title:'Transfer 2-of-2 signature', body:'TXR-04830 · $1.24M to cold storage', time:'12m ago', nav:'fundflow', sub:'approvals' },
@@ -130,7 +132,7 @@ function TopBar({ crumbs, ccy, setCcy, onToggleSidebar, onNav, roleId, setRoleId
       </div>
       <div className="pms-search">
         <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.4"><circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/></svg>
-        Search positions, orders, investors…
+        Search positions, orders, organizations…
         <kbd>⌘K</kbd>
       </div>
       <div className="spacer"></div>
