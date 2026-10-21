@@ -139,7 +139,7 @@
 .cred-done-h span { font-size: 11.5px; color: var(--fg-3); }
 .kyc-flow > div.done { color: var(--fg-3); }
 .kyc-flow > div.done span { background: rgba(104,218,152,0.15); color: var(--pms-pos); }
-.cred-exposed { display: flex; gap: 10px; align-items: center; padding: 9px 16px; font-size: 11.5px; line-height: 1.45; color: var(--fg-2); background: rgba(255,155,79,0.06); border-top: 1px solid var(--pms-divider); border-bottom: 1px solid rgba(255,155,79,0.22); }
+.cred-exposed { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; padding: 9px 16px; font-size: 11.5px; line-height: 1.45; color: var(--fg-2); background: rgba(255,155,79,0.06); border-top: 1px solid var(--pms-divider); border-bottom: 1px solid rgba(255,155,79,0.22); }
 .cred-exposed .ic { flex: 0 0 18px; height: 18px; border-radius: 50%; display: grid; place-items: center; font-size: 11px; font-weight: 800; color: #1a1206; background: var(--pms-warn); }
 .cred-exposed b { color: var(--pms-warn); white-space: nowrap; font-weight: 700; }
 .cred-act { height: 26px; padding: 0 11px; border-radius: 6px; font: inherit; font-size: 11px; font-weight: 600; white-space: nowrap; cursor: pointer; color: var(--fg-1); background: rgba(255,255,255,0.04); border: 1px solid var(--pms-divider-strong); }
@@ -148,3 +148,4 @@
 .cred-act.primary:hover { background: rgba(176,108,255,0.22); }
 .cred-row-exposed td:first-child { box-shadow: inset 3px 0 0 var(--pms-warn); }
 .cred-st { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+.cred-exposed > span:last-child { flex: 1 1 360px; min-width: 0; }

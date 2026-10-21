@@ -11,11 +11,13 @@ const CRED_ROWS = {
     { sub_account_id: 31, label: 'testcandlehunter1', exchange: 'Binance', has_key: true, has_passphrase: false, ip_restricted: true, created_at: '2026-07-02', status: 'active' },
     { sub_account_id: 32, label: 'testcandlehunterusdc2', exchange: 'Binance', has_key: true, has_passphrase: false, ip_restricted: true, created_at: '2026-04-18', status: 'rotate-soon' },
     { sub_account_id: 41, label: 'testcandlehunter-okx', exchange: 'OKX', has_key: false, has_passphrase: false, ip_restricted: false, created_at: null, status: 'missing' },
+    { sub_account_id: 42, label: 'testcandlehunter-okx2', exchange: 'OKX', has_key: true, has_passphrase: false, ip_restricted: true, created_at: '2026-09-30', status: 'active' },
   ],
   prod: [
     { sub_account_id: 14, label: 'candlehunter1', exchange: 'Binance', has_key: true, has_passphrase: false, ip_restricted: true, created_at: '2026-08-11', status: 'active' },
     { sub_account_id: 15, label: 'candlehunterusdc2', exchange: 'Binance', has_key: true, has_passphrase: false, ip_restricted: true, created_at: '2026-03-02', status: 'rotate-soon' },
     { sub_account_id: 22, label: 'candlehunter-okx1', exchange: 'OKX', has_key: true, has_passphrase: true, ip_restricted: false, created_at: '2025-10-01', status: 'expired' },
+    { sub_account_id: 23, label: 'candlehunter-okx2', exchange: 'OKX', has_key: true, has_passphrase: false, ip_restricted: true, created_at: '2026-09-30', status: 'active' },
   ],
 };
 const CRED_STATUS = { active: ['ACTIVE', 'pos'], 'rotate-soon': ['ROTATE SOON', 'warn'], expired: ['EXPIRED', 'neg'], missing: ['NO KEY', ''] };
@@ -57,23 +59,24 @@ function ApiKeysCard({ can }) {
     <div className="pms-card">
       <div className="pms-card-head">API keys<div className="label-meta">exchange sub-accounts · {env.toUpperCase()} environment</div>
       </div>
-      {exposed.length > 0 && <div className="cred-exposed"><span className="ic">!</span><b>Rotate {exposed.length} key{exposed.length > 1 ? 's' : ''}</b><span>Stored before the audit-log fix: the API key{exposed.some(r => /okx/i.test(r.exchange)) ? ' and OKX passphrase were' : ' was'} readable in the admin action log (never the secret). Create a new key on the exchange, then Replace.</span></div>}
+      {exposed.length > 0 && <div className="cred-exposed"><span className="ic">!</span><b>Rotate {exposed.length} key{exposed.length > 1 ? 's' : ''}</b><span>Stored before the audit-log fix: the API key{exposed.some(r => /okx/i.test(r.exchange)) ? ' and OKX passphrase were' : ' was'} readable in the admin action log (never the secret). Create new keys on the exchange and replace them.</span></div>}
       {notice && <div className="cred-notice"><span>✓</span>{notice}<span className="muted">· bots may keep the previous key for up to 30 min</span><button onClick={() => setNotice(null)}>×</button></div>}
       <div className="pms-card-body flush" style={{ overflowX: 'auto' }}>
         <table className="pms-table">
-          <thead><tr><th>Sub-account</th><th>Exchange</th><th>Key</th><th title="As claimed when the key was stored — not checked against the exchange">IP restricted</th><th title="Time the key was stored in PMS, not when it was created on the exchange">Stored</th><th>Status</th><th className="num"></th></tr></thead>
+          <thead><tr><th>Sub-account</th><th>Exchange</th><th>Key</th><th title="OKX keys need a passphrase; Binance keys must not have one">Passphrase</th><th title="As claimed when the key was stored — not checked against the exchange">IP restricted</th><th title="Time the key was stored in PMS, not when it was created on the exchange">Stored</th><th>Status</th><th className="num"></th></tr></thead>
           <tbody>{rows.map(r => {
             const [sl, sk] = CRED_STATUS[r.status];
             return (
               <tr key={r.sub_account_id} className={r.exposed ? 'cred-row-exposed' : ''}>
                 <td><div className="kyc-org"><b>{r.label}</b><span className="pms-mono">sub-account #{r.sub_account_id}</span></div></td>
                 <td><VenueChip name={r.exchange}/></td>
-                <td>{r.has_key ? <span className="text-xs">Set{r.exchange === 'OKX' && <span className="muted"> · passphrase {r.has_passphrase ? '✓' : '✕'}</span>}</span> : <span className="muted text-xs">None</span>}</td>
+                <td>{r.has_key ? <span className="text-xs">Set</span> : <span className="muted text-xs">None</span>}</td>
+                <td>{!/okx/i.test(r.exchange) ? <span className="muted text-xs" title="Binance keys have no passphrase">n/a</span> : !r.has_key ? <span className="muted text-xs">required</span> : r.has_passphrase ? <span className="pms-pos text-xs">✓ Set</span> : <span className="pms-neg text-xs strong">✕ Missing</span>}</td>
                 <td>{r.has_key ? (r.ip_restricted ? <span className="pms-pos text-xs">Yes</span> : <span className="pms-warn text-xs">No</span>) : <span className="muted">—</span>}</td>
                 <td className="pms-mono text-xs muted">{credDate(r.created_at)}</td>
-                <td><div className="cred-st"><span className={`pms-pill ${sk}`}>{sl}</span>{r.exposed && <span className="pms-pill warn" title={/okx/i.test(r.exchange) ? 'API key and passphrase were readable in the action log' : 'API key was readable in the action log'}>EXPOSED · ROTATE</span>}</div></td>
+                <td><div className="cred-st"><span className={`pms-pill ${sk}`}>{sl}</span>{/okx/i.test(r.exchange) && r.has_key && !r.has_passphrase && <span className="pms-pill neg" title="Stored without a passphrase — OKX rejects every request. Replace the key with its passphrase.">NO PASSPHRASE · BROKEN</span>}{r.exposed && <span className="pms-pill warn" title={/okx/i.test(r.exchange) ? 'API key and passphrase were readable in the action log' : 'API key was readable in the action log'}>EXPOSED · ROTATE</span>}</div></td>
                 <td className="num">{canSet
-                  ? <button className={`cred-act ${r.has_key ? '' : 'primary'}`} onClick={() => { setNotice(null); setTarget(r); }}>{r.has_key ? 'Replace' : 'Set key'}</button>
+                  ? <button className={`cred-act ${!r.has_key || (/okx/i.test(r.exchange) && !r.has_passphrase) ? 'primary' : ''}`} onClick={() => { setNotice(null); setTarget(r); }}>{r.has_key ? 'Replace' : 'Set key'}</button>
                   : <span className="text-xs muted" title={!isAdmin ? 'Admin only' : !totpEnrolled ? 'Enroll 2FA first' : 'Socket offline'}>{!isAdmin ? 'Admin only' : !totpEnrolled ? 'Enroll 2FA' : 'Offline'}</span>}</td>
               </tr>);
           })}</tbody>
@@ -137,7 +140,7 @@ function SetKeyModal({ row, env, onClose, onDone }) {
         <>
           {step === 'confirm' && <div className="pms-confirm-banner danger"><span className="ic">⚠</span><div><b>This replaces the key set on {credDate(row.created_at)}.</b> Bots may keep the previous key for up to 30 minutes. Delete the old key on the exchange only after that.</div></div>}
           <div style={step === 'confirm' ? { display: 'none' } : null}>
-          <div className="pms-confirm-banner warn"><span className="ic">⚠</span><div>The key must be <b>IP-allowlisted to {CRED_EGRESS[env]}</b> (this environment's egress address) and have <b>withdrawals disabled</b>.</div></div>
+          <div className="pms-confirm-banner warn"><span className="ic">⚠</span><div>The key must be <b>IP-allowlisted to {CRED_EGRESS[env]}</b> (this environment's egress address) and have <b>withdrawals disabled</b>.{okx && <> OKX also needs the key's <b>passphrase</b>.</>}</div></div>
           {err && <div className={`cred-err ${err === 'upstream_unavailable' ? 'warn' : ''}`}>{CRED_ERR[err]}{CRED_KEEP_FIELDS.includes(err) ? <span> Your entries were kept.</span> : <span> Fields were cleared.</span>}</div>}
           <div className="pms-form-body">
             <FormField label="API key" required error={null}>
@@ -146,9 +149,9 @@ function SetKeyModal({ row, env, onClose, onDone }) {
             <FormField label="API secret" required hint="8–256 printable characters, no spaces at either end">
               <div className="pms-ff-input"><input ref={secRef} type="password" className="pms-mono" placeholder="••••••••" {...CRED_SAFE} autoComplete="new-password" onInput={e => setOk(o => ({ ...o, sec: credValid(e.target.value, 8, 256) }))}/></div>
             </FormField>
-            {okx && <FormField label="Passphrase" required hint="Required for OKX">
+            {okx ? <FormField label="Passphrase" required hint="Required for OKX — the one you set when creating the key on OKX. A key without it is rejected.">
               <div className="pms-ff-input"><input ref={passRef} type="password" className="pms-mono" placeholder="••••••" {...CRED_SAFE} autoComplete="new-password" onInput={e => setOk(o => ({ ...o, pass: credValid(e.target.value, 1, 128) }))}/></div>
-            </FormField>}
+            </FormField> : <div className="cred-fine">Passphrase: not used by {row.exchange} — only API key and secret are needed.</div>}
             <FormRow>
               <FormField label="IP restricted on the exchange"><FilterToggle label={ipr ? 'Yes, allowlisted' : 'No'} checked={ipr} onChange={setIpr}/></FormField>
               <FormField label="Authenticator code" required hint="Demo: 000000 wrong code · 111111 rate limit · 999999 unknown outcome">
