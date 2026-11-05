@@ -46,7 +46,7 @@ Code paths below are relative to `apps/pm-system/src/`. Design paths are relativ
   - "Investor activity": the events of every wallet of the org, filterable by investor;
   - "KYC & wallets": today's data, shown as a table.
 - **People:** each person shows a name (masked without KYC access), ownership %, PEP, ID, liveness, address and screening checks. Today the tab shows only the id and roles.
-- **KYC steps:** seven fixed steps, Account → Entity → People → Documents → Wallet → Review → Approved. Screening, Source of funds, Cool-down and Trading are dropped. *Pending owner decision, see "Open questions".*
+- **KYC steps:** seven fixed steps, Account → Entity → People → Documents → Wallet → Review → Approved. Screening, Source of funds, Cool-down and Trading are dropped. *Owner decision: keep Screening and Cool-down from the code (see "Owner decisions").*
 - **Banners:** Frozen shows the reason code and Waiting on client shows the request reason. v3 has no Dissolved banner.
 
 **KYC case** (`v3/page-orgs.jsx:193-227`, `v3/kyc-docs.jsx`, `KYC Document Viewer.html`)
@@ -55,11 +55,11 @@ Code paths below are relative to `apps/pm-system/src/`. Design paths are relativ
 - **Checklist:** each checklist item links to its documents.
 
 **Filters**
-- "Waiting on client" counts `draft` and `info_requested` together. Today it counts only `info_requested`, and the number comes from the backend. *Pending owner decision.*
+- "Waiting on client" counts `draft` and `info_requested` together. Today it counts only `info_requested`, and the number comes from the backend. *Owner decision: yes; the backend counter changes.*
 
 **Quarantine**
 - v3 shows a KPI row instead of the header text.
-- v3 has only Release and Return. **The code is ahead here**: it already has settle, close and the second approvals. Keep the code's actions. *Pending owner decision.*
+- v3 has only Release and Return. **The code is ahead here**: it already has settle, close and the second approvals. Keep the code's actions (owner decision).
 
 **Unchanged:** the organizations list (columns and filters), the Wallets tab, Wallet whitelisting, the KYC review queue.
 
@@ -123,15 +123,13 @@ pm-system reads pms-backend's WebSocket topics (`investors.list`, `investor.{id}
 5. **Per-organization totals** (balance, P&L) and an activity feed across all investors.
 6. **The INV ref.** It does not exist. Either add it, or agree that the investor id stays `user.id`, as pm-system does today.
 
-## Open questions (owner decisions pending)
+## Owner decisions (Kos, 2026-11-05)
 
-Wait for these before building the parts they touch.
+1. **Wallets with no user yet** (linked by ops before the first sign-in, or from quarantine) **are investors**: zero balance, View only. **Tron wallets are folded into their EVM investor** (`linked_user_id`); they are not separate investors.
+2. **Keep what works in the code** where v3 removes it: the Quarantine actions (settle, close, second approvals) and the KYC steps (Screening, Cool-down). Follow v3 for the rest: the Record card becomes the Investors card, and Hurdle becomes Net deposited.
+3. **"Waiting on client" counts `draft` and `info_requested`.** The backend counter changes to match.
 
-1. **Wallets with no user yet** (linked by ops before the first sign-in, or from quarantine): are they investors? Proposed: yes, with a zero balance and View only. **Tron wallets:** a separate investor, or folded into their EVM investor (`linked_user_id`)? Proposed: folded.
-2. **What v3 removes that works today:** the Record card, the Screening and Cool-down KYC steps, Hurdle, and the Quarantine actions. Proposed:
-   - keep the Quarantine actions and the KYC steps from the code;
-   - follow v3 for the rest.
-3. **"Waiting on client" counting `draft`:** this needs a backend change to the counter.
+The backend work in "What the backend must provide" is being implemented in backend-fastapi and pms-backend (milestone M12). Build against the fields marked available in Appendix B now, and add the rest as the topics gain them.
 
 ---
 
