@@ -61,12 +61,22 @@ function TsPanel({ title, tag, sub, right, children }) {
 function TradeSimPage() {
   const [venue, setVenue] = React.useState('all');
   const [page, setPage] = React.useState(0);
+  const [view, setView] = React.useState(() => (location.hash.match(/ts=(\w+)/) || [])[1] || 'data');
+  const pick = v => { setView(v); const base = location.hash.replace(/[#&]ts=\w+/, '').replace(/^#/, ''); history.replaceState(null, '', '#' + (base ? base + '&' : '') + 'ts=' + v); };
   const PAGE = 5;
   const pairs = TS_PAIRS.slice(page * PAGE, page * PAGE + PAGE);
   const basis = venue === 'all' ? TS_BASIS : TS_BASIS.filter(b => b.venue === venue);
   const evMax = Math.max(...TS_EVENTS), evTotal = TS_EVENTS.reduce((a, b) => a + b, 0);
   const winClass = w => w >= 80 ? 'pms-pos strong' : w >= 50 ? 'pms-warn' : 'pms-neg';
   const ddClass = d => d <= 2 ? 'pms-pos' : d <= 5 ? 'pms-warn' : 'pms-neg';
+
+  const stale = TS_LOOPS.filter(l => l.status !== 'ok').length;
+  const bestPair = TS_PAIRS[0], bestBasis = TS_BASIS.filter(b => b.net > 0).sort((a, b) => b.score - a.score)[0];
+  const SECTIONS = [
+    { id: 'data',  title: 'Data collection',   feeds: 'All strategies',        kpi: `${TS_WORKERS.length} streams`, sub: `${tsFmtN(evTotal)} events · 24h`, state: stale ? 'warn' : 'ok', stateLabel: stale ? `${stale} loop stale` : 'recorder OK' },
+    { id: 'live',  title: 'Live simulation',   feeds: 'Market-Neutral Arb',    kpi: `${tsFmtN(418_902)} sims`,     sub: `best ${bestPair.sym} · score ${bestPair.combos[0].score.toFixed(3)}`, state: 'ok', stateLabel: 'real-time' },
+    { id: 'basis', title: 'Spot vs perp basis', feeds: 'Cross-Exchange Arb',   kpi: `${TS_BASIS.filter(b => b.net > 0).length}/${TS_BASIS.length} profitable`, sub: bestBasis ? `top ${bestBasis.symbol} · ${bestBasis.net.toFixed(1)}% net` : '—', state: 'ok', stateLabel: 'cash-and-carry' },
+  ];
 
   return (
     <div className="ts">
@@ -76,8 +86,19 @@ function TradeSimPage() {
         <span className="ov-live"><span className="dot"></span>RECORDER OK</span>
       </div>
 
+      <div className="ts-summary">
+        {SECTIONS.map(s => (
+          <button key={s.id} className={`ts-sum ${view === s.id ? 'active' : ''}`} onClick={() => pick(s.id)}>
+            <div className="ts-sum-h"><span className="t">{s.title}</span><span className={`ts-tag ${s.state}`}>{s.stateLabel}</span></div>
+            <div className="ts-sum-k pms-mono">{s.kpi}</div>
+            <div className="ts-sum-s">{s.sub}</div>
+            <div className="ts-sum-f"><span className="muted">feeds</span><b>{s.feeds}</b></div>
+          </button>
+        ))}
+      </div>
+
       <div className="ts-grid">
-        <TsPanel title="Data collection" tag={{ t: '24/7', k: 'ok' }} sub="One recorder worker per venue stream · sharded websocket feeds">
+        {view === 'data' && <TsPanel title="Data collection" tag={{ t: '24/7', k: 'ok' }} sub="One recorder worker per venue stream · sharded websocket feeds · shared by every strategy">
           <div className="ts-workers">
             {TS_WORKERS.map(w => (
               <div key={w.name} className="ts-worker">
@@ -98,9 +119,9 @@ function TradeSimPage() {
           <div className="ts-axis pms-mono"><span>−24h</span><span>−12h</span><span>now</span></div>
           <div className="ts-sub"><span>Disk usage by table</span><span className="muted pms-mono" style={{ marginLeft: 'auto' }}>total DB 954 GB</span></div>
           <div className="ts-tables">{TS_TABLES.map(t => <div key={t.t} className="ts-table"><span className={`k ${t.kind}`}>{t.kind}</span><span className="pms-mono">{t.t}</span><b className="pms-mono">{t.size}</b></div>)}</div>
-        </TsPanel>
+        </TsPanel>}
 
-        <TsPanel title="Live simulation" tag={{ t: 'Real-time', k: 'ok' }} sub="Events detected and simulated automatically by the data recorder"
+        {view === 'live' && <TsPanel title="Live simulation" tag={{ t: 'Market-Neutral Arb', k: 'strat' }} sub="Events detected and simulated automatically by the data recorder · produces the spread / stop / timeout parameters the Market-Neutral Arb bots trade with"
           right={<span className="text-xs muted pms-mono">updated 2m ago</span>}>
           <div className="ts-stats three"><div><b>{tsFmtN(2_184_320)}</b><span>market events</span></div><div><b className="acc">{tsFmtN(418_902)}</b><span>simulations run</span></div><div><b className="info">341</b><span>symbols with events</span></div></div>
           <div className="ts-sub"><span>Best parameter combinations</span><span className="muted">ranked by composite score · up to 5 variations per pair · win rate, drawdown, speed, frequency and APY blended 0–1</span></div>
@@ -132,9 +153,9 @@ function TradeSimPage() {
             </div>
           ); })}
           <div className="ts-pg"><button className="pms-btn ghost" disabled={page === 0} onClick={() => setPage(p => p - 1)}>← Prev</button><span>Page <b>{page + 1}</b> of <b>{Math.ceil(TS_PAIRS.length / PAGE)}</b></span><button className="pms-btn ghost" disabled={page >= Math.ceil(TS_PAIRS.length / PAGE) - 1} onClick={() => setPage(p => p + 1)}>Next →</button><span className="muted">showing {pairs.length} of {TS_PAIRS.length} pairs</span></div>
-        </TsPanel>
+        </TsPanel>}
 
-        <TsPanel title="Spot vs perp basis" tag={{ t: 'cash-and-carry' }}
+        {view === 'basis' && <TsPanel title="Spot vs perp basis" tag={{ t: 'Cross-Exchange Arb', k: 'strat' }}
           sub={<>Long spot + short perp, collect funding while the hedge stays market-neutral. <b>Funding 8h</b> is the venue's last rate (every 2 min). <b>Annual carry</b> = funding × 3 × 365. <b>Net annual</b> subtracts round-trip fees (Binance 0.28% / OKX 0.30%). <b>Stable carry</b> = 40% now + 30% 7d + 30% 30d. <b>BE days</b> = days to recoup switching cost. <b>Score</b> = 45% stable carry + 15% capacity + 40% 1/BE. BTC & ETH pinned; the rest sorted by score.</>}
           right={<div className="ov-span">{['all', 'binance', 'okx'].map(v => <button key={v} className={venue === v ? 'active' : ''} onClick={() => setVenue(v)}>{v === 'all' ? 'ALL' : v.toUpperCase()}</button>)}</div>}>
           <div className="ts-scroll"><table className="ts-tbl basis">
@@ -159,7 +180,7 @@ function TradeSimPage() {
               </tr>); })}
             </tbody></table></div>
           <div className="ts-pg"><span className="muted">showing {basis.length} pairs (2 pinned)</span><span className="spacer"></span><span className="muted pms-mono">updated 38s ago</span></div>
-        </TsPanel>
+        </TsPanel>}
       </div>
     </div>
   );
