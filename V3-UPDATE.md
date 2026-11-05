@@ -11,8 +11,8 @@ maps every v3 change against the current code in `KemelyDApp/frontend-mono`, `ap
 - **Read the rest in this order:**
   - "Summary" below for the shape of the change;
   - "Per-tab changes" for the work list;
-  - "Appendix A" for every difference, with the design and code file:line;
-  - "Appendix B" for what the backend serves today.
+  - "Data for the new screens" for what the topics carry today and what comes later;
+  - "Appendix A" for every difference, with the design and code file:line.
 
 Code paths below are relative to `apps/pm-system/src/`. Design paths are relative to this repo.
 
@@ -108,28 +108,32 @@ Code paths below are relative to `apps/pm-system/src/`. Design paths are relativ
 
 None of these screens gets the investor level. Small design-vs-code differences are listed in Appendix A; treat them as optional.
 
-## What the backend must provide
+## Data for the new screens
 
-pm-system reads pms-backend's WebSocket topics (`investors.list`, `investor.{id}`), not backend-fastapi directly. So each new field below is a change in the pms-backend topic, and some also need a new backend-fastapi route. Until these exist, build the screens against the fields that are already served (Appendix B) and leave the rest empty.
+pm-system keeps reading pms-backend's WebSocket topics. Today's topics already carry part of what v3 shows; the rest is being added on the backend side (milestone M12). The new field and topic names will be published in pms-backend `contracts/asyncapi.yaml`. Until a field arrives, show `—`; do not compute money figures in the browser.
 
-1. **Admin reads for one investor.** Today these exist only on the user's own `/me` routes:
-   - P&L 30d and ITD;
-   - the withdrawable/locked split;
-   - the access state;
-   - the strategy-change history (from → to).
-2. **On each investor row:** wallet status, `is_primary`, source, the org's KYC status, access, P&L 30d and allocation %. Most of these already exist on `WalletRow` and `OrganizationRow` and only need joining to the investor.
-3. **One activity feed per wallet** that merges ops, intents, quarantine and KYC events. Nothing merges them today.
-4. **Sign-in history** (`SIGN_IN`). Today only `last_login_at` is stored.
-5. **Per-organization totals** (balance, P&L) and an activity feed across all investors.
-6. **The INV ref.** It does not exist. Either add it, or agree that the investor id stays `user.id`, as pm-system does today.
+| v3 shows | Today | Arrives with M12 |
+|---|---|---|
+| Investor id, address, organization id/ref | `investors.list`, `investor.{id}` (the investor id is the backend user id; keep it as the id and display `INV-<id>`) | — |
+| Balance, withdrawable, locked breakdown, allocation per strategy | `investors.list` row (balance, withdrawable, locked) and `investor.{id}` (allocation %) | allocation % on the list row |
+| Wallet status, primary flag, source, the org's KYC status | on the org's wallet rows (`org.{id}`), not on the investor | on the investor row and the investor page |
+| Access state (Trading / View only / Frozen / Removed) | — | on the investor row and the investor page (computed by the backend) |
+| P&L 30d, P&L ITD, net deposited | realised ITD/YTD/MTD on `investor.{id}` | P&L 30d and ITD on the row and the page; net deposited |
+| Wallets with no user yet (linked by ops, from quarantine) | not listed | listed as investors: zero balance, View only |
+| Activity: deposits, withdrawals, P&L, fees | `investor.{id}` ops | — |
+| Activity: STRATEGY_CHANGE (from → to), SIGN_IN, WALLET_LINKED, DEPOSIT_HELD, DEPOSIT_BLOCKED, FROZEN | — | in the investor's activity feed |
+| Organization totals (balance, locked, P&L 30d/ITD, split by access) | — | on the org (new fields or topic) |
+| "Latest activity" across all investors, and across one org's investors | — | a new feed topic |
+| "Waiting on client" count including `draft` | `orgs.list` counts `info_requested` only | the same count field, now including `draft` |
+| Overview "KYC cases to review" link | — | `link.sub='kyc'` on `overview.attention` |
 
 ## Owner decisions (Kos, 2026-11-05)
 
 1. **Wallets with no user yet** (linked by ops before the first sign-in, or from quarantine) **are investors**: zero balance, View only. **Tron wallets are folded into their EVM investor** (`linked_user_id`); they are not separate investors.
 2. **Keep what works in the code** where v3 removes it: the Quarantine actions (settle, close, second approvals) and the KYC steps (Screening, Cool-down). Follow v3 for the rest: the Record card becomes the Investors card, and Hurdle becomes Net deposited.
-3. **"Waiting on client" counts `draft` and `info_requested`.** The backend counter changes to match.
+3. **"Waiting on client" counts `draft` and `info_requested`.** The count comes from the backend, which changes to match; the tile needs no logic of its own.
 
-The backend work in "What the backend must provide" is being implemented in backend-fastapi and pms-backend (milestone M12). Build against the fields marked available in Appendix B now, and add the rest as the topics gain them.
+Build the screens now against "Data for the new screens": wire the fields that exist today, and show `—` for the rest until M12 ships them.
 
 ---
 
@@ -554,95 +558,3 @@ A per-area reader compared v3 with the code. A second reader re-checked the Orga
   - Data source today: finance.firm (revenue_accounts); command sweep.treasury (COMMANDS_READY false)
 
 **Unchanged:** The parts below are the same in the design and the code. Reconciliation: header subtitle, Export breaks, + New reconciliation; KPI row (Open breaks with the severity and copies breakdown, Net diff, Last full recon, SLA compliance 'not tracked yet'); reconciler cards that filter Recent runs on click; Open breaks columns (BREAK ID, RECONCILER, PROBLEM, VENUE+pool, ASSET, EXPECTED, ACTUAL, DIFF, DIFF %, AGE, LAST SEEN, SEVERITY, COPIES, Investigate), grouped by problem; Recent runs columns (STARTED, RECONCILER, RUN, DURATION, STATUS, FINDINGS, ERROR); New reconciliation modal with reconciler and pool pickers; force and resolve need admin; phase-2 commands are disabled. Finance: 'Firm P&L' title and subtitle, Export, Sweep to treasury, the meta line; KPIs (Firm balance vs previous span, Perf, Mgmt and Txn spread YTD); Revenue accounts columns (VENUE, ACCOUNT, BALANCE, STATUS, PENDING SWEEPS, IN <span> with the perf/mgmt/spread split, LAST SWEEP); Fee accruals columns (TIME, TYPE, STRATEGY, POOL, AMOUNT); Fee waterfall (SOURCE, SHARE bar, AMOUNT, VS PREV); Recent sweeps columns (TIME, TYPE, AMOUNT, FROM → TO, STATUS); Sweep modal with account, an optional amount (empty sweeps the whole balance) and a TOTP code.
-
----
-
-## Appendix B: what backend-fastapi serves today for the investor level
-
-Read from backend-fastapi `master` @ `6f12176`. File:line references are to that repo.
-
-**backend-fastapi (origin/master 6f12176): wallet-level investor data**
-
-Short answer: the backend already treats one EVM wallet as one user, and every balance, op, fee and P&L row is keyed by `user_id`. So "investor = wallet" works today as "investor = the user bound to a wallet". The gaps are in the reads. Per-investor P&L, withdrawable, access and the strategy-change list are served only for the logged-in user (`/me` routes). No admin route serves them for another user, and no route merges everything into one per-wallet feed.
-
-**1. Models**
-- **Organization** (`backend/models/kyc.py:78`): holds `kyc_status` and `migrated_from_user_id` (:110). It has no balance of its own.
-- **KycWallet**, table `wallet` (`kyc.py:231`):
-  - `organization_id` (:262), `user_id` (:263, nullable), `ref` with the `W-` prefix (:261), `is_primary` (:268), `source` (:270), `status` (:271), `frozen_by` (:273), `linked_user_id` (:292, Tron only).
-  - Constraints: `uq_wallet_user_id` (:241) means one user has at most one wallet; `uq_wallet_one_primary` (:243) means one primary wallet per org.
-  - Allowed values: `WALLET_STATUSES` (`backend/services/kyc/constants.py:45`), `WALLET_SOURCES` = `main_app_connect | linked_by_ops | quarantined_deposit` (:48), `FROZEN_BY` (:52).
-- **Wallet login means one user per address.** `_wallet_user` (`backend/api/routes/auth.py:212-228`) looks up `User.name == address` and creates that user on first login. `User.last_login_at` is set at `auth.py:138`.
-- **Caveats for the design's "every wallet has a balance":**
-  - A `linked_by_ops` or `quarantined_deposit` wallet has `user_id = NULL` until that wallet signs in. It is bound at `backend/services/kyc/ownership.py:216,233`. Until then it has no balance rows at all.
-  - A Tron wallet never has its own `user_id`. Its balance belongs to its EVM investor (`linked_user_id`, check `ck_wallet_tron_no_user`), so a Tron wallet is not its own investor.
-
-**2. How balances and allocations are keyed: per user only. Nothing is keyed per wallet or per org.**
-- `client_strategy_balance`: unique on `(strategy_id, user_id)`, with `balance`, `hold`, `locked_amount`, `lock_expires_at` (`backend/models/client_strategy.py:19-41`).
-- Legacy `client_pool_balance`: unique on `(pool_id, user_id)` (`backend/models/client_pool.py:20`).
-- Also keyed by `user_id`:
-  - `ledger_entry.user_id` (`backend/models/ledger.py:29`)
-  - `fee_ledger.user_id` (`backend/models/fee_ledger.py:19`)
-  - `fund_intent.user_id` (`backend/models/fund_intent.py:129`), plus `from_address` (:105)
-  - `strategy_change.user_id` (`backend/models/strategy_change.py:83`)
-- An org total means summing over the org's wallets' `user_id`s.
-
-**3. Routes that touch the wallet level today** (all under `/v1`)
-- `GET /admin/kyc/wallets/?user_id=&organization_ref=&address=&source=&status=` (`backend/api/routes/admin_kyc.py:524`). Returns `WalletRow` (:163): `user_id`, `is_primary`, `source`, `status`, `frozen_by`, `linked_user_id`.
-- `GET /admin/kyc/organizations/` (:499). `OrganizationRow` (:144) has `primary_wallet_ref`, `primary_user_id` and `wallet_count`.
-- `GET /admin/kyc/organizations/{ref}/` (:620). `OrganizationDetail.wallets` (:331) and `gating_mode`.
-- `GET /admin/kyc/organizations/{ref}/activity/?event_type=` (:633). `ActivityRow` (:335) carries `wallet_ref`.
-- `GET /admin/kyc/quarantine/` (:572). The `DepositQuarantine` model has `wallet_id` and `matched_organization_id` (`kyc.py:398,401`).
-- `GET /admin/kyc/wallets/{ref}/cascade-preview/` (`admin_kyc.py:669`).
-- `GET /client-strategy-balances/?user_id=`, admin (`backend/api/routes/client_strategy.py:82`).
-- `GET /client-strategy-hurdles/?user_id=`, admin (:159).
-- `GET /strategy/client-ops/?user_name=<address>&type=&since=&until=&strategy_id=`, admin scope `csbo:read_multi` (:1588). Row schema `ClientStrategyBalanceOpJoinedPublic` (`backend/models/client_strategy.py:113`): `type`, `status`, `amount`, `logical_dt`, `strategy_id`, `transaction_hash`, `network_code`, `coin`.
-- `GET /pool/client-ops/?user_name=` for the legacy pool (`backend/api/routes/client_pool.py:448`).
-- **Only for the logged-in user (`/me`):**
-  - withdrawable: `client_strategy.py:746` and `:785`
-  - P&L summary (total / 7d / 30d / 90d): `:1767`
-  - daily and total P&L: `:1671`, `:1704`, `:1738`
-  - strategy changes list: `:1312`
-  - access: `GET /me/access/` (`backend/api/routes/kyc_access.py:162`, schema `AccessPublic` :80)
-
-**4. What the pm-system frontend calls today**
-It calls no backend-fastapi REST path for Investors or InvestorDetails. Both pages read pms-backend WebSocket topics:
-- Investors list: `investors.list` (`shared/topics/investors/investorsListTopic.ts`)
-- InvestorDetails: `investor.{id}` (`investorTopic.ts`, used by `pages/InvestorDetails/hooks/useInvestorDetails.ts:24`)
-- Organizations: `orgs.list`, `org.{id}`, `kyc.queue`, `kyc.case.{id}`, `wallets.queue`, `quarantine.list`, `kyc.link_chains`
-
-How these line up with the backend:
-- `InvestorRow.id` is the backend `user.id` and `address` is `user.name` (`types/investors.ts`). The frontend therefore already treats investor = user = wallet.
-- `organization_id` and `organization_ref` already come on each investor row.
-- The org page's investors are `investors.list` filtered by `organization_id` (`useOrgInvestors.ts`).
-- The topic op kinds are DEPOSIT, WITHDRAW, PNL, PERFORMANCE_FEE, MANAGEMENT_FEE, REALLOCATION, NETWORK_FEE, TXN_FEE_SPREAD and WALLET_TRANSFER, which is the backend `TransferType` (`backend/models/common.py:14`).
-
-**5. Design fields**
-
-| Design field | Status | Source or work needed |
-|---|---|---|
-| INV-xxxx ref / id | derivable | Use `user.id` (what pm-system uses now) or the wallet `W-` ref. No `INV-` ref exists. |
-| wallet, address | available | `WalletRow.ref` and `.address` (`admin_kyc.py:163`); `investor.address` = `user.name`. |
-| org, orgId, orgStatus | available | `WalletRow.organization_ref` / `organization_id`; `OrganizationRow.kyc_status`. |
-| walletStatus, is_primary, source | available | `WalletRow.status`, `.is_primary`, `.source`. |
-| access (trading / view_only / frozen / removed) | derivable | Combine `WalletRow.status` + `frozen_by` with org `kyc_status` + `gating_mode`. In shadow or off mode the backend does not block. The real per-user gate is `/me/access/` only; there is no admin "access for user X" route. |
-| balance | available | Sum of `/client-strategy-balances/?user_id=` (`client_strategy.py:82`). Zero for a wallet whose `user_id` is NULL. |
-| withdrawable / locked | derivable (partly) | `balance − locked_amount − hold` per row. Position locks and pending-withdrawal reserves come from pms-backend's `locked_breakdown`. The backend's withdrawable route is `/me` only. |
-| strategy allocation % | derivable | Each strategy balance ÷ the user's total. |
-| P&L 30d / ITD | derivable | Sum `/strategy/client-ops/?user_name=&type=PNL[&since=]`, net of fee ops. `/strategy/user/me/pnl/summary/` already does this, but `/me` only. Admin per-user P&L: **missing**. |
-| deposited | derivable | DEPOSIT minus WITHDRAW ops from the same route (pms-backend already has `deposits_total` / `withdrawals_total`). |
-| Activity: DEPOSIT, WITHDRAW, PNL, MANAGEMENT_FEE, PERFORMANCE_FEE | available | `/strategy/client-ops/?user_name=` (:1588). PENDING withdrawals come from `fund_intent` via pms-backend. |
-| Activity: STRATEGY_CHANGE | partial | The ops show only as two REALLOCATION legs (`backend/services/client_strategy.py:1021,1161`). The `strategy_change` row (from → to) is listed only for the caller (`client_strategy.py:1312`). Admin list by user: **missing**. |
-| Activity: WALLET_LINKED, FROZEN | derivable | Org activity events `wallet.linked`, `wallet.connected`, `wallet.activated`, `wallet.frozen`, `org.frozen`, filtered by `wallet_ref` (`admin_kyc.py:633`; event list at `constants.py:324`). |
-| Activity: DEPOSIT_HELD | derivable | Quarantine rows by `wallet_id` / `matched_organization_id` (`admin_kyc.py:572`), or the `deposit.quarantined` event. |
-| Activity: DEPOSIT_BLOCKED | derivable (weak) | `gate.would_block` audit events, whose payload carries `user_id` (org activity, or `/admin/kyc/gate-tally/` :593). Recorded per org, not per wallet. |
-| Activity: SIGN_IN | partial | Only the last sign-in: `user.last_login_at` (`backend/models/user.py:31`) and `wallet_ownership_proof.issued_at`. No sign-in history: **missing**. |
-| One merged per-wallet feed (money + fees + access) | missing | Nothing merges ops, intents, quarantine and KYC audit events. pms-backend would have to merge them, or the backend needs a new route. |
-
-**Backend work the design needs**
-1. Admin per-user reads for P&L summary (30d / ITD), withdrawable with its breakdown, access state, and the strategy-change list. These are admin versions of existing `/me` routes.
-2. A decision on what a wallet with `user_id = NULL` shows (ops-linked before first sign-in, or quarantined): zero balance, view-only.
-3. A decision for Tron wallets: either fold them into their EVM investor or make them separate investors. Today their money belongs to `linked_user_id`.
-4. Sign-in history, if the feed should show more than the last login.
-5. Optionally an `INV-` ref, or agree that investor id = user id, which is what pm-system uses today.
-
-Nothing else is missing for KYC org and wallet data: `WalletRow` and `OrganizationDetail.wallets` already cover wallet, address, primary flag, source and status.
