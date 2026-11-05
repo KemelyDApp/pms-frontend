@@ -94,7 +94,6 @@ function Sidebar({ active, onNav, collapsed, roleId, can, session, onLogout }) {
         {userOpen && (
           <div className="pms-sb-menu">
             <div className="h">Signed in via {session?.wallet || 'wallet'} · <span className="pms-mono">{(session?.env || 'test').toUpperCase()}</span></div>
-            <button onClick={() => { setUserOpen(false); onNav('admin', 'admin'); }}>My access & keys</button>
             <button className="neg" onClick={() => { setUserOpen(false); onLogout && onLogout(); }}>Sign out</button>
           </div>
         )}
@@ -110,8 +109,14 @@ function TopBar({ crumbs, ccy, setCcy, onToggleSidebar, onNav, roleId, setRoleId
   const role = ROLES[roleId] || ROLES.admin;
   const NOTIFS = [
     { id:'n1', cat:'critical', icon:'⚠', title:'Drawdown limit breach', body:'prop-bot-01 at −4.18% / −5.00% cap · strategy paused', time:'2m ago', nav:'strategies', sub:'list' },
+    ...(window.PMS_V2 ? [
+      { id:'k1', cat:'action', icon:'✋', title:'KYC cases to review', body:'3 cases · 2 past the 3-day deadline', time:'2m ago', nav:'investors', sub:'review' },
+      { id:'k3', cat:'action', icon:'✋', title:'KYC case needs 2nd approval', body:'ORG-0007 · high risk · 1st approval U-0004', time:'3m ago', nav:'investors', sub:'review' },
+      { id:'k2', cat:'action', icon:'✋', title:'Quarantined deposits', body:'4 held · newest Q-0001', time:'5m ago', nav:'investors', sub:'quarantine' },
+    ] : [
     { id:'k1', cat:'action',   icon:'✋', title:'KYC case needs 2nd approval', body:'Quill & Stark LLP · high risk · 1st approval by Sarah Okafor', time:'3m ago', nav:'investors', sub:'review' },
     { id:'k2', cat:'action',   icon:'✋', title:'Deposit quarantined', body:'$250K USDC from a non-whitelisted wallet → Stratton Capital · whitelisting started', time:'5m ago', nav:'investors', sub:'quarantine' },
+    ]),
     { id:'n2', cat:'action',   icon:'✋', title:'Withdrawal needs approval', body:'INV-1842 · $124K USDC · audit passed', time:'4m ago', nav:'fundflow', sub:'approvals' },
     { id:'n3', cat:'critical', icon:'⚠', title:'Reconciliation FAIL', body:'Balance drift pool 1 / Binance · 93.15 USDT missing', time:'6m ago', nav:'recon' },
     { id:'n4', cat:'action',   icon:'✋', title:'Transfer 2-of-2 signature', body:'TXR-04830 · $1.24M to cold storage', time:'12m ago', nav:'fundflow', sub:'approvals' },

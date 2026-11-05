@@ -1582,10 +1582,10 @@ function OverviewPage({ ccy, onOpenPool }) {
               </div>
             </div>
 
-            <label className="row" style={{marginTop:12, gap:8, fontSize:11, color:'var(--fg-2)', cursor:'pointer'}}>
+            {!window.PMS_V2 && (<label className="row" style={{marginTop:12, gap:8, fontSize:11, color:'var(--fg-2)', cursor:'pointer'}}>
               <input type="checkbox" checked={rejectNotify} onChange={e=>setRejectNotify(e.target.checked)}/>
               Send email notification to {rejectFor.user}
-            </label>
+            </label>)}
 
             {rejectChips.length === 0 && rejectReason.trim().length < 10 && (
               <div style={{marginTop:12, padding:'8px 12px', background:'rgba(255,196,84,0.08)', border:'1px solid rgba(255,196,84,0.20)', borderRadius:6, fontSize:11, color:'var(--pms-warn)'}}>

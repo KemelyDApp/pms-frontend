@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"/><title>KYC · Open document</title>
+<meta name="design_doc_mode" content="canvas"/>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="v3/v3.css"/>
+<style>
+body{background:transparent}
+a{color:#b06cff}a:hover{color:#c68eff}
+.fr{position:absolute;width:1440px;background:#141414;border-radius:6px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+.fr-label{position:absolute;font:700 14px Montserrat;color:#1d1e26;letter-spacing:.01em}.fr-label span{display:block;font:500 11.5px Montserrat;color:#5b5c66;margin-top:3px}
+.notes{position:absolute;width:360px;display:flex;flex-direction:column;gap:10px}
+.n{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:12px;line-height:1.5;color:#c9c9d2;background:#1b1c24;border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px}
+.n b{color:#fff;font-weight:600}.n code{font:11px 'JetBrains Mono';color:#ffd300;background:rgba(255,211,0,.08);padding:1px 4px;border-radius:3px}
+.pin{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#ffd300;color:#141414;font:800 10px 'JetBrains Mono';flex:0 0 20px;box-shadow:0 0 0 3px rgba(255,211,0,.18)}
+.pin.abs{position:absolute;z-index:5}
+.shell{display:grid;grid-template-columns:216px 1fr;height:100%}
+.side{border-right:1px solid rgba(255,255,255,.06);padding:16px 12px;display:flex;flex-direction:column;gap:4px;background:#121218}
+.side .brand{font-weight:700;font-size:14px;padding:4px 8px 16px}.side .g{font-size:9px;letter-spacing:.14em;color:#8a8a96;text-transform:uppercase;padding:12px 8px 6px}
+.side .it{font-size:12.5px;font-weight:600;color:#9a9aa6;padding:8px 10px;border-radius:8px}.side .it.on{color:#fff;background:rgba(168,74,255,.14)}
+.hdr{height:56px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:12px;padding:0 24px;font-size:13px;color:#9a9aa6}.hdr b{color:#fff;font-weight:600}
+.main{padding:20px 32px;display:flex;flex-direction:column;gap:14px}
+.ttl{display:flex;align-items:center;gap:10px}.ttl h1{font-size:22px;font-weight:700}
+.sub{font-size:12px;color:#8a8a96}
+.cols .pms-card{overflow:visible}.cols{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start}
+.stabs{display:flex;gap:18px;padding:0 16px;border-bottom:1px solid rgba(255,255,255,.06)}.stabs span{font-size:12px;font-weight:600;color:#8a8a96;padding:11px 0;position:relative}.stabs span.on{color:#fff}.stabs span.on:after{content:'';position:absolute;left:0;right:0;bottom:-1px;height:2px;background:#a84aff;border-radius:2px}
+.acts{display:inline-flex;gap:6px;justify-content:flex-end}
+.ck{display:flex;align-items:flex-start;gap:10px;padding:9px 16px;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;line-height:1.4}
+.ck:last-child{border-bottom:0}.ck .bx{width:16px;height:16px;border-radius:4px;border:1.5px solid rgba(255,255,255,.25);flex:0 0 16px;margin-top:1px;display:grid;place-items:center;font-size:10px;font-weight:800}
+.ck .bx.on{background:#a84aff;border-color:#a84aff;color:#fff}.ck .t{flex:1}.ck .vd{font-size:11px;font-weight:600;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
+.ck .sec{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:#8a8a96;font-weight:700}
+.dim{position:absolute;inset:0;background:rgba(10,10,12,.72);backdrop-filter:blur(3px)}
+.vw{position:absolute;background:#16171F;border:1px solid rgba(255,255,255,.1);border-radius:14px;box-shadow:0 30px 80px -20px rgba(0,0,0,.7),0 0 60px rgba(135,15,255,.18);display:flex;flex-direction:column;overflow:hidden}
+.vw-h{display:flex;align-items:center;gap:10px;padding:14px 20px;border-bottom:1px solid rgba(255,255,255,.06)}.vw-h .t{font-size:15px;font-weight:700}.vw-h .x{margin-left:auto}
+.vw-b{flex:1;min-height:0;display:grid;grid-template-columns:268px minmax(0,1fr)}
+.meta{border-right:1px solid rgba(255,255,255,.06);padding:16px 18px;display:flex;flex-direction:column;gap:16px;overflow:hidden}
+.meta .dl{grid-template-columns:auto 1fr;font-size:11.5px}
+.lbl{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#8a8a96}
+.stage{display:flex;flex-direction:column;min-width:0;background:#0f1016}
+.tb{display:flex;align-items:center;gap:8px;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.06);background:#16171F}
+.tb .grp{display:inline-flex;align-items:center;border:1px solid rgba(255,255,255,.08);border-radius:7px;overflow:hidden}.tb .grp span{padding:5px 9px;font:600 11px 'JetBrains Mono';color:#c9c9d2;border-right:1px solid rgba(255,255,255,.08)}.tb .grp span:last-child{border-right:0}
+.tb .sp{flex:1}
+.canvas{flex:1;min-height:0;overflow:hidden;display:flex;justify-content:center;padding:22px;gap:18px;position:relative}
+.thumbs{position:absolute;left:14px;top:22px;display:flex;flex-direction:column;gap:8px}.thumbs i{display:block;width:44px;height:58px;background:#e9e9ee;border-radius:2px;opacity:.45}.thumbs i.on{opacity:1;outline:2px solid #a84aff;outline-offset:2px}
+.paper{width:520px;background:#f3f3f6;border-radius:2px;box-shadow:0 8px 30px rgba(0,0,0,.5);padding:44px 48px;color:#22232b;display:flex;flex-direction:column;gap:10px;flex:0 0 auto}
+.paper h4{font:700 15px Montserrat;letter-spacing:.06em;text-align:center;color:#22232b}.paper .c{text-align:center;font-size:10px;color:#666}
+.paper .ln{height:7px;border-radius:2px;background:#cfd0d8}.paper .row{display:grid;grid-template-columns:150px 1fr;gap:10px;font-size:10.5px;align-items:center}.paper .row b{font-weight:600;color:#444}
+.paper .seal{width:72px;height:72px;border-radius:50%;border:2px solid #9aa0c0;align-self:flex-end;display:grid;place-items:center;font-size:8px;color:#7a80a0;text-align:center;font-weight:700;letter-spacing:.08em}
+.imgph{width:620px;height:410px;border-radius:6px;background:repeating-linear-gradient(135deg,#1d1e27 0 12px,#20212b 12px 24px);border:1px dashed rgba(255,255,255,.18);display:grid;place-items:center;color:#8a8a96;font:600 12px 'JetBrains Mono';text-align:center}
+.vw-f{display:flex;align-items:center;gap:8px;padding:12px 20px;border-top:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.015)}.vw-f .lg{font-size:11px;color:#8a8a96;display:inline-flex;align-items:center;gap:6px;margin-right:auto}
+.tip{position:absolute;z-index:6;background:#22232d;border:1px solid rgba(255,255,255,.14);border-radius:8px;padding:8px 11px;font-size:11.5px;line-height:1.45;color:#e4e4ea;box-shadow:0 10px 30px rgba(0,0,0,.5);width:250px;white-space:normal;font-family:Montserrat}
+.tip:after{content:'';position:absolute;bottom:-6px;right:28px;width:10px;height:10px;background:#22232d;border-right:1px solid rgba(255,255,255,.14);border-bottom:1px solid rgba(255,255,255,.14);transform:rotate(45deg)}
+.states{display:grid;grid-template-columns:1fr 1fr;gap:20px;padding:28px}
+.st{display:flex;flex-direction:column;gap:10px}.st-h{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700}.st-h code{font:500 10.5px 'JetBrains Mono';color:#ffd300;margin-left:auto}
+.mini{height:340px;border:1px solid rgba(255,255,255,.1);border-radius:12px;overflow:hidden;display:flex;flex-direction:column;background:#0f1016}
+.mini .canvas{align-items:center;justify-content:center}
+.ctr{display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;max-width:360px}.ctr .ic{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:20px;font-weight:800}
+.ctr .h{font-size:14px;font-weight:700}.ctr .p{font-size:12px;color:#9a9aa6;line-height:1.5}
+.bar{width:280px;height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden}.bar i{display:block;height:100%;width:62%;background:linear-gradient(90deg,#870fff,#b06cff)}
+.skel{background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.08),rgba(255,255,255,.04));border-radius:4px}
+</style></head><body>
+
+<!-- ───────── Frame 1 · KYC case with document actions ───────── -->
+<div class="fr-label" style="left:60px;top:28px">1 · KYC case › Evidence › Documents<span>Row actions Open / Download · checklist “View document” links · 1440 × 900</span></div>
+<div class="fr" style="left:60px;top:80px;height:900px">
+<div class="shell"><aside class="side"><div class="brand">Kemely PMS</div><div class="g">Portfolio</div><div class="it">Overview</div><div class="it">Strategies</div><div class="it">TradeSim Hub</div><div class="it">Trading</div><div class="it on">Organizations</div><div class="it">Fund flow</div><div class="g">Control</div><div class="it">Reconciliation</div><div class="it">Finance</div><div class="it">Admin</div></aside>
+<div><div class="hdr">Organizations <span>/</span> KYC review <span>/</span> <b>ORG-0003</b></div>
+<div class="main">
+<a class="muted" style="font-size:12px">← KYC review</a>
+<div class="ttl"><h1>ORG-0003</h1><span class="rt rt--info">In review</span><span class="rt rt--neutral">Company</span><span class="rt rt--warning">medium risk</span></div>
+<div class="sub">Jurisdiction <b class="mono" style="color:#fff">KY</b> · submitted 19 Oct 2026 · claimed by you · signatory T. P. · primary wallet <span class="mono" style="color:#fff" title="0x12ab4c7e00d1f0b6a93e5c21aa07b1e4c09f9f3c">0x12ab…9f3c</span></div>
+<div class="cols">
+<div class="pms-card" style="position:relative">
+<div class="stabs"><span>People · 3</span><span class="on">Documents · 7</span><span>Screening</span><span>Wallets · 2</span></div>
+<span class="pin abs" style="left:-10px;top:52px">1</span>
+<div class="pt"><table><thead><tr><th>DOCUMENT</th><th>REF</th><th>PERSON</th><th>STATUS</th><th>FILE · UPLOADED</th><th class="num"></th></tr></thead><tbody>
+<tr style="background:rgba(176,108,255,.07)"><td class="sans">Certificate of incorporation</td><td>D-0042</td><td class="muted">entity</td><td><span class="rt rt--positive rt--sm">Accepted</span></td><td class="muted" style="line-height:1.35">PDF · 3 pp · 1.2 MB<br/><span style="font-size:10.5px">19 Oct 2026</span></td><td class="num"><span class="acts"><button class="btn btn--default btn--sm">Open</button><button class="btn btn--ghost btn--sm">Download</button></span></td></tr>
+<tr><td class="sans">Register of directors</td><td>D-0043</td><td class="muted">entity</td><td><span class="rt rt--positive rt--sm">Accepted</span></td><td class="muted" style="line-height:1.35">PDF · 2 pp · 640 KB<br/><span style="font-size:10.5px">19 Oct 2026</span></td><td class="num"><span class="acts"><button class="btn btn--default btn--sm">Open</button><button class="btn btn--ghost btn--sm">Download</button></span></td></tr>
+<tr><td class="sans">Proof of registered address</td><td>D-0044</td><td class="muted">entity</td><td><span class="rt rt--warning rt--sm">Pending</span></td><td class="muted" style="line-height:1.35">PDF · 1 p · 410 KB<br/><span style="font-size:10.5px">20 Oct 2026</span></td><td class="num"><span class="acts"><button class="btn btn--default btn--sm">Open</button><button class="btn btn--ghost btn--sm">Download</button></span></td></tr>
+<tr><td class="sans">Passport</td><td>D-0045</td><td>T. P.</td><td><span class="rt rt--warning rt--sm">Pending</span></td><td class="muted" style="line-height:1.35">JPEG · 2.3 MB<br/><span style="font-size:10.5px">19 Oct 2026</span></td><td class="num"><span class="acts"><button class="btn btn--default btn--sm">Open</button><button class="btn btn--ghost btn--sm">Download</button></span></td></tr>
+<tr><td class="sans">Proof of address</td><td>D-0046</td><td>T. P.</td><td><span class="rt rt--negative rt--sm">Rejected</span></td><td class="muted" style="line-height:1.35">PDF · 1 p · 290 KB<br/><span style="font-size:10.5px">19 Oct 2026</span></td><td class="num"><span class="acts"><button class="btn btn--default btn--sm">Open</button><button class="btn btn--ghost btn--sm">Download</button></span></td></tr>
+<tr><td class="sans">Board resolution</td><td>D-0047</td><td class="muted">entity</td><td><span class="rt rt--warning rt--sm">Pending</span></td><td class="muted" style="line-height:1.35">DOCX · 84 KB<br/><span style="font-size:10.5px">21 Oct 2026</span></td><td class="num" style="position:relative"><span class="acts"><span class="ph2" title="This file type can't be previewed. Download it to view."><button class="btn btn--default btn--sm" disabled>Open</button></span><button class="btn btn--ghost btn--sm">Download</button></span></td></tr>
+<tr><td class="sans">Source of funds statement</td><td>D-0048</td><td>M. K.</td><td><span class="rt rt--neutral rt--sm">Requested</span></td><td class="muted" style="line-height:1.35">no file<br/><span style="font-size:10.5px">—</span></td><td class="num"><span class="acts"><span class="ph2" title="No file uploaded yet"><button class="btn btn--default btn--sm" disabled>Open</button></span><span class="ph2" title="No file uploaded yet"><button class="btn btn--ghost btn--sm" disabled>Download</button></span></span></td></tr>
+</tbody></table></div>
+<span class="pin abs" style="left:-10px;top:300px">2</span>
+<div class="pt__foot"><span>7 documents · 6 with a file</span><span>Opening or downloading a document is logged.</span></div>
+</div>
+<div class="pms-card" style="position:relative">
+<div class="pms-card__head"><span class="pms-card__title">Checklist</span><span class="pms-card__meta">4 of 9 ticked</span></div>
+<span class="pin abs" style="right:12px;top:60px">3</span>
+<div>
+<div class="ck"><span class="sec">Entity verification</span></div>
+<div class="ck"><span class="bx on">✓</span><span class="t">Registration documents match the public registry</span><a class="vd">View document ›</a></div>
+<div class="ck"><span class="bx"></span><span class="t">Registered address verified (document under 3 months)</span><a class="vd">View document ›</a></div>
+<div class="ck"><span class="bx on">✓</span><span class="t">Directors and signatories match the board resolution</span><a class="vd">View 2 documents ›</a></div>
+<div class="ck"><span class="sec">People</span></div>
+<div class="ck"><span class="bx on">✓</span><span class="t">UBO identity verified (T. P.)</span><a class="vd">View document ›</a></div>
+<div class="ck"><span class="bx"></span><span class="t">UBO address verified (T. P.)</span><a class="vd">View document ›</a></div>
+<div class="ck"><span class="bx"></span><span class="t">Source of funds explained (M. K.)</span><span class="vd muted" title="Requested from the client · no file uploaded yet">No document yet</span></div>
+<div class="ck"><span class="sec">Screening</span></div>
+<div class="ck"><span class="bx on">✓</span><span class="t">Sanctions and PEP screening clear</span><span class="muted" style="font-size:11px">no document needed</span></div>
+<div class="ck"><span class="bx"></span><span class="t">Adverse media reviewed</span><span class="muted" style="font-size:11px">no document needed</span></div>
+</div></div>
+</div></div></div></div></div>
+<div class="notes" style="left:1530px;top:80px">
+<div class="n"><span class="pin">1</span><div><b>Row actions.</b> Shown when <code>documents[].has_file = true</code>. <b>Open</b> streams <code>GET /kyc/cases/{org_id}/documents/{ref}/content</code>; <b>Download</b> adds <code>?disposition=attachment</code>. Columns map to <code>doc_type</code>, <code>ref</code>, <code>person_masked</code>, <code>status</code>, <code>mime</code> · <code>page_count</code> · <code>size_bytes</code>, <code>uploaded_at</code>.</div></div>
+<div class="n"><span class="pin">2</span><div><b>Disabled actions.</b> <code>mime</code> outside <code>image/jpeg|png</code> or <code>application/pdf</code> → Open disabled, tooltip “This file type can't be previewed. Download it to view.” <code>has_file = false</code> → both disabled, tooltip “No file uploaded yet”.</div></div>
+<div class="n"><span class="pin">3</span><div><b>View document.</b> Rendered when <code>checklist[].evidence_refs</code> is non-empty; opens the same viewer on the first ref (or a picker of refs when there are several). Empty refs with a required doc type → muted “No document yet”. Items with no evidence type show “no document needed”.</div></div>
+<div class="n"><span class="pin">·</span><div>Masking: people show as <code>person_masked</code> (“T. P.”); wallets shortened, full address in the tooltip.</div></div>
+</div>
+
+<!-- ───────── Frame 2 · Viewer · PDF ───────── -->
+<div class="fr-label" style="left:60px;top:1028px">2 · Viewer · PDF opened from the table<span>Large PmsModal (1180 px) · page nav · zoom · Download · logged footer</span></div>
+<div class="fr" style="left:60px;top:1080px;height:900px">
+<div class="dim"></div>
+<div class="vw" style="left:130px;top:50px;width:1180px;height:800px">
+<div class="vw-h"><span class="t">Certificate of incorporation</span><span class="mono muted" style="font-size:12px">D-0042</span><span class="rt rt--positive rt--sm">Accepted</span><span class="pin" style="margin-left:6px">4</span><button class="modal__close x">✕</button></div>
+<div class="vw-b">
+<div class="meta">
+<div><p class="lbl">Document</p><dl class="dl" style="margin-top:10px"><dt>Ref</dt><dd>D-0042</dd><dt>Type</dt><dd style="font-family:Montserrat">Certificate of incorporation</dd><dt>Person</dt><dd>entity</dd><dt>Uploaded</dt><dd>19 Oct 2026 · 14:02</dd><dt>File</dt><dd>PDF · 3 pp · 1.2 MB</dd><dt>SHA-256</dt><dd title="9c1e4b…d07a">9c1e…d07a</dd></dl></div>
+<div style="position:relative"><p class="lbl">Used as evidence for</p><span class="pin abs" style="left:-28px;top:-3px">5</span>
+<div style="display:flex;flex-direction:column;gap:8px;margin-top:10px">
+<div class="ck" style="padding:9px 10px;border:1px solid rgba(255,255,255,.08);border-radius:8px"><span class="bx on">✓</span><span class="t" style="font-size:11.5px">Registration documents match the public registry</span></div>
+<div class="ck" style="padding:9px 10px;border:1px solid rgba(255,255,255,.08);border-radius:8px"><span class="bx"></span><span class="t" style="font-size:11.5px">Registered office matches the registry extract</span></div>
+</div><p class="muted" style="font-size:10.5px;margin-top:8px;line-height:1.5">Ticking here updates the case checklist.</p></div>
+</div>
+<div class="stage">
+<div class="tb"><span class="grp"><span>‹</span><span>Page 1 / 3</span><span>›</span></span><span class="grp"><span>−</span><span>100%</span><span>+</span></span><span class="grp"><span>Fit width</span><span>⟳</span></span><span class="pin" style="margin-left:4px">6</span><span class="sp"></span><span class="muted" style="font-size:11px">rendered in the browser · no copy kept</span></div>
+<div class="canvas"><div class="thumbs"><i class="on"></i><i></i><i></i></div>
+<div class="paper"><p class="c">CAYMAN ISLANDS · REGISTRAR OF COMPANIES</p><h4>CERTIFICATE OF INCORPORATION</h4><p class="c">Companies Act (Revised)</p>
+<div class="ln" style="width:92%;margin-top:14px"></div><div class="ln" style="width:85%"></div><div class="ln" style="width:70%"></div>
+<div class="row" style="margin-top:12px"><b>Company name</b><span>H•••• Capital Partners Ltd</span></div>
+<div class="row"><b>Registration number</b><span class="mono">CR-38•••1</span></div>
+<div class="row"><b>Date of incorporation</b><span>04 March 2019</span></div>
+<div class="row"><b>Registered office</b><div class="ln" style="width:80%"></div></div>
+<div class="ln" style="width:95%;margin-top:12px"></div><div class="ln" style="width:88%"></div><div class="ln" style="width:60%"></div>
+<div class="seal">REGISTRAR<br/>SEAL</div></div></div>
+</div></div>
+<div class="vw-f"><span class="lg">🔒 Opening a document is logged.</span><span class="pin">7</span><button class="btn btn--ghost">Close</button><button class="btn btn--default">Download</button></div>
+</div></div>
+<div class="notes" style="left:1530px;top:1080px">
+<div class="n"><span class="pin">4</span><div><b>Header.</b> <code>doc_type</code> · <code>ref</code> · <code>status</code>. Esc and ✕ close; focus returns to the row's Open button.</div></div>
+<div class="n"><span class="pin">5</span><div><b>Used as evidence for.</b> Checklist items whose <code>evidence_refs</code> include this ref. Ticking calls the same <code>kyc.checklist.tick</code> as the case page, so the officer can tick while looking at the file.</div></div>
+<div class="n"><span class="pin">6</span><div><b>Toolbar.</b> Page nav uses <code>page_count</code>; thumbnails on the left for multi-page PDFs. Zoom 50–300%, Fit width, Rotate. Images get zoom + rotate only.</div></div>
+<div class="n"><span class="pin">7</span><div><b>Logging.</b> The content request writes audit event <code>kyc.document.opened</code> (actor, org_id, ref); Download writes <code>kyc.document.downloaded</code>. Download counts toward the hourly limit (see 429).</div></div>
+</div>
+
+<!-- ───────── Frame 3 · Viewer · image from checklist ───────── -->
+<div class="fr-label" style="left:60px;top:2028px">3 · Viewer · image opened from a checklist link<span>“UBO identity verified (T. P.)” › View document · the linked item is pinned at the top of the side panel</span></div>
+<div class="fr" style="left:60px;top:2080px;height:900px">
+<div class="dim"></div>
+<div class="vw" style="left:130px;top:50px;width:1180px;height:800px">
+<div class="vw-h"><span class="t">Passport</span><span class="mono muted" style="font-size:12px">D-0045</span><span class="rt rt--warning rt--sm">Pending</span><span class="muted" style="font-size:12px">· T. P.</span><button class="modal__close x">✕</button></div>
+<div class="vw-b">
+<div class="meta">
+<div style="position:relative;border:1px solid rgba(176,108,255,.4);background:rgba(176,108,255,.07);border-radius:10px;padding:12px"><p class="lbl" style="color:#c9a6ff">Checking</p><span class="pin abs" style="right:-8px;top:-8px">8</span>
+<div class="ck" style="padding:8px 0 0;border:0"><span class="bx"></span><span class="t" style="font-size:12px;font-weight:600">UBO identity verified (T. P.)</span></div>
+<p class="muted" style="font-size:10.5px;margin-top:6px;line-height:1.5">Name, date of birth and photo match the person record. Document not expired.</p>
+<button class="btn btn--primary btn--sm" style="margin-top:10px;width:100%">Tick item</button></div>
+<div><p class="lbl">Document</p><dl class="dl" style="margin-top:10px"><dt>Ref</dt><dd>D-0045</dd><dt>Type</dt><dd style="font-family:Montserrat">Passport</dd><dt>Person</dt><dd>T. P.</dd><dt>Uploaded</dt><dd>19 Oct 2026 · 13:48</dd><dt>File</dt><dd>JPEG · 2.3 MB</dd></dl></div>
+<div><p class="lbl">Person record</p><dl class="dl" style="margin-top:10px"><dt>Name</dt><dd>T. P.</dd><dt>Born</dt><dd>•• •• 1981</dd><dt>Nationality</dt><dd>GB</dd></dl><p class="muted" style="font-size:10.5px;margin-top:8px">Full name shown only after “Reveal names” on the case page.</p></div>
+</div>
+<div class="stage">
+<div class="tb"><span class="grp"><span>−</span><span>140%</span><span>+</span></span><span class="grp"><span>Fit</span><span>⟳ Rotate</span></span><span class="sp"></span><span class="muted" style="font-size:11px">1 of 2 evidence documents · <a>Next: D-0046 ›</a></span></div>
+<div class="canvas" style="align-items:center"><div class="imgph">Passport image · D-0045<br/><span style="font-weight:500;font-size:11px">image/jpeg · rendered from the content stream</span></div></div>
+</div></div>
+<div class="vw-f"><span class="lg">🔒 Opening a document is logged.</span><button class="btn btn--ghost">Close</button><button class="btn btn--default">Download</button></div>
+</div></div>
+<div class="notes" style="left:1530px;top:2080px">
+<div class="n"><span class="pin">8</span><div><b>Opened from the checklist.</b> The viewer receives <code>checklist_item_id</code>; that item is pinned with its guidance text and a <b>Tick item</b> button (<code>kyc.checklist.tick</code>). When the item has several <code>evidence_refs</code>, “Next: D-0046 ›” steps through them without closing.</div></div>
+<div class="n"><span class="pin">·</span><div>Person data uses <code>person_masked</code> unless the case is in reveal mode (10-minute window started on the case page).</div></div>
+</div>
+
+<!-- ───────── Frame 4 · States ───────── -->
+<div class="fr-label" style="left:60px;top:3028px">4 · States<span>Viewer stage for each response · the header, side panel and footer stay as in frame 2</span></div>
+<div class="fr" style="left:60px;top:3080px;height:1170px">
+<div class="states">
+<div class="st"><div class="st-h">Loading · streaming<code>200 · chunked · Content-Length</code></div>
+<div class="mini"><div class="tb"><span class="grp"><span>‹</span><span>Page – / –</span><span>›</span></span><span class="grp"><span>−</span><span>100%</span><span>+</span></span><span class="sp"></span></div>
+<div class="canvas" style="flex-direction:column;gap:16px"><div class="skel" style="width:240px;height:150px"></div><div class="ctr"><div class="bar"><i></i></div><p class="p"><b style="color:#fff">Opening D-0045…</b> 1.4 of 2.3 MB</p></div></div></div>
+<p class="sub">Progress from bytes received ÷ <code class="mono" style="color:#ffd300">size_bytes</code>. Controls stay disabled until the first page renders.</p></div>
+
+<div class="st"><div class="st-h">Error<code>5xx · network · stream aborted</code></div>
+<div class="mini"><div class="tb"><span class="grp" style="opacity:.4"><span>‹</span><span>Page – / –</span><span>›</span></span><span class="sp"></span></div>
+<div class="canvas"><div class="ctr"><span class="ic" style="background:rgba(255,71,74,.14);color:#FF474A">!</span><p class="h">Couldn't open the document</p><p class="p">The file didn't load. Check your connection and try again.</p><button class="btn btn--primary btn--sm">Retry</button><p class="mono muted" style="font-size:10px">request id 7f3a…c21e</p></div></div></div>
+<p class="sub">Retry re-requests the content. The request id is shown so ops can find it in the logs.</p></div>
+
+<div class="st"><div class="st-h">Limit reached<code>429 · Retry-After: 1380</code></div>
+<div class="mini"><div class="tb"><span class="sp"></span></div>
+<div class="canvas"><div class="ctr"><span class="ic" style="background:rgba(255,130,47,.14);color:#FF822F">⏱</span><p class="h">Download limit reached for this hour</p><p class="p">Try again in 23 min.</p><button class="btn btn--default btn--sm" disabled>Retry in 23:00</button></div></div></div>
+<p class="sub">Minutes from <code class="mono" style="color:#ffd300">Retry-After</code> (seconds, rounded up). The countdown re-enables Retry; Download buttons in the table show the same tooltip until then.</p></div>
+
+<div class="st"><div class="st-h">Unsupported or missing file<code>415 UNSUPPORTED_MEDIA · 404 FILE_MISSING</code></div>
+<div class="mini"><div class="tb"><span class="sp"></span></div>
+<div class="canvas" style="gap:24px"><div class="ctr" style="max-width:250px"><span class="ic" style="background:rgba(255,255,255,.06);color:#c9c9d2">?</span><p class="h">This file can't be previewed</p><p class="p">DOCX files open outside the PMS.</p><button class="btn btn--default btn--sm">Download</button></div>
+<div style="width:1px;align-self:stretch;background:rgba(255,255,255,.08)"></div>
+<div class="ctr" style="max-width:250px"><span class="ic" style="background:rgba(255,71,74,.14);color:#FF474A">∅</span><p class="h">File not found</p><p class="p">The record exists but the file is missing from storage. Ask the client to upload it again.</p><button class="btn btn--ghost btn--sm">Request again</button></div></div></div>
+<p class="sub">415 is normally caught before opening (Open disabled in the table); the panel covers a mime mismatch found while streaming. 404 FILE_MISSING also flags the row with a red “file missing” tag.</p></div>
+
+<div class="st" style="grid-column:1 / -1"><div class="st-h">No permission<code>403 · KYC_APPROVE_REQUIRED · scope kyc.approve</code></div>
+<div class="pms-card" style="position:relative">
+<div class="pt"><table><thead><tr><th>DOCUMENT</th><th>REF</th><th>PERSON</th><th>STATUS</th><th>FILE · UPLOADED</th><th class="num"></th></tr></thead><tbody>
+<tr><td class="sans">Certificate of incorporation</td><td>D-0042</td><td class="muted">entity</td><td><span class="rt rt--positive rt--sm">Accepted</span></td><td class="muted" style="line-height:1.35">PDF · 3 pp · 1.2 MB<br/><span style="font-size:10.5px">19 Oct 2026</span></td><td class="num" style="position:relative"><span class="tip" style="right:-6px;bottom:38px;text-align:left">Opening KYC documents needs the KYC approve role. Ask an admin under Admin › Roles.</span><span class="acts"><span class="ph2"><span class="mono muted" style="font-size:11px;display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px dashed rgba(255,255,255,.14);border-radius:7px">🔒 Restricted</span></span></span></td></tr>
+<tr><td class="sans">Passport</td><td>D-0045</td><td>T. P.</td><td><span class="rt rt--warning rt--sm">Pending</span></td><td class="muted" style="line-height:1.35">JPEG · 2.3 MB<br/><span style="font-size:10.5px">19 Oct 2026</span></td><td class="num"><span class="mono muted" style="font-size:11px;display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border:1px dashed rgba(255,255,255,.14);border-radius:7px">🔒 Restricted</span></td></tr>
+</tbody></table></div></div>
+<p class="sub">For users without <code class="mono" style="color:#ffd300">kyc.approve</code> the Open / Download actions are hidden and replaced by a “Restricted” marker with this tooltip. Checklist “View document” links are hidden too. If a 403 still comes back (role changed mid-session), the viewer shows the same message and closes on dismiss.</p></div>
+</div></div>
+
+</body></html>

@@ -1503,7 +1503,7 @@ function AdminConfigTab() {
       <div className="pms-card" style={{ marginBottom: 12 }}>
         <div className="pms-card-head">System configuration<div className="label-meta">stored in <span className="pms-mono">system_setting</span> · read by every service · edits write to the audit log</div></div>
         <div className="pms-card-body" style={{ padding: 0 }}>
-          {Object.entries(DEFAULTS).map(([k, d]) => (
+          {Object.entries(DEFAULTS).filter(([k]) => !(window.PMS_V2 && /^(whitelist_cooldown_hours|kyc_review_interval_months)$/.test(k))).map(([k, d]) => (
             <div className="pms-cfg-row cfg-edit" key={k}>
               <div className="k"><b>{d.label}</b><span className="pms-mono">{k}</span><div className="d">{d.desc}</div></div>
               <div className="v">
@@ -1523,6 +1523,7 @@ function AdminConfigTab() {
           ))}
         </div>
       </div>
+      {window.PMS_V2 ? <K2ConfigCard/> : (
       <div className="pms-card" style={{ marginBottom: 12 }}>
         <div className="pms-card-head">Risk-tier limits<div className="label-meta">per Organization · set by the KYC risk tier · leave blank for no limit</div><span className="spacer"></span>
           {tlSaved ? <span className="pms-pos text-xs strong">Saved</span> : <button className="pms-btn primary text-xs" onClick={saveTl}>Save limits</button>}</div>
@@ -1534,6 +1535,7 @@ function AdminConfigTab() {
           </table>
         </div>
       </div>
+      )}
       <div className="pms-card">
         <div className="pms-card-head">CEX withdrawal fees<div className="label-meta">live from exchanges · read-only</div>
           <span className="spacer"></span>

@@ -215,7 +215,7 @@ function FundFlowPage() {
             { key:'asset', label:'Asset', render:r=> <AssetChip sym={r.asset}/>},
             { key:'chain', label:'Chain', render:r=> <span className="pms-pill">{r.chain}</span>},
             { key:'strategy', label:'Strategy', render:r=> <span className="pms-pill purple">{r.strategy}</span>},
-            { key:'stage', label:'Stage', render:r=> <StageDot stage={r.stage} fail={r.failed}/>},
+            { key:'stage', label:'Stage', render:r=> (window.PMS_V2 && k2IntentPill(r)) || <StageDot stage={r.stage} fail={r.failed}/>},
             { key:'kyt', label:'KYT', num:true, render:r => <span className={typeof r.kyt==='number' && r.kyt>30 ? 'pms-warn' : ''}>{r.kyt}</span>},
             { key:'age', label:'Age', render:r=> <span className="pms-mono text-xs muted">{r.age}</span>},
             { key:'unlock', label:'Unlock ETA', render:r=> <span className="pms-mono text-xs">{r.unlock_eta}</span>},
@@ -244,7 +244,9 @@ function FundFlowPage() {
               <dt>Age</dt><dd>{selected.age}</dd>
               <dt>Unlock</dt><dd>{selected.unlock_eta}</dd>
               {selected.reason && <><dt>Failure reason</dt><dd className="pms-neg">{selected.reason}</dd></>}
+              {selected.failure_reason && <><dt>Failure</dt><dd>{window.PMS_V2 && k2IntentPill(selected)}<div className="pms-mono text-xs muted" style={{marginTop:4}}>{selected.failure_reason}</div></dd></>}
             </dl>
+            {window.PMS_V2 && <K2RefusalBlock key={selected.id} intent={selected}/>}
             <div style={{marginTop:14, paddingTop:12, borderTop:'1px solid var(--pms-divider)'}}>
               <div className="text-xs muted" style={{marginBottom:6}}>Saga timeline</div>
               <div style={{display:'grid', gridTemplateColumns:'auto 1fr', gap:'6px 12px', fontSize:11, fontFamily:'var(--pms-mono)'}}>
@@ -261,7 +263,7 @@ function FundFlowPage() {
 
       <FormModal open={newOpen} title={isDeposit ? 'New deposit' : 'New withdrawal'} onClose={()=>setNewOpen(false)}
         submitLabel={isDeposit ? 'Create deposit intent' : 'Submit withdrawal'} submitTone={isDeposit ? 'primary' : 'danger'}
-        canSubmit={wf.investor && wf.amount && (isDeposit || wf.address)}
+        canSubmit={wf.investor && wf.amount && (isDeposit || wf.address || window.PMS_V2)}
         subtitle={isDeposit
           ? 'Create a deposit intent for an investor. It enters the pipeline at KYT screening and credits once confirmed on-chain.'
           : 'Submit a withdrawal on behalf of an investor. It enters the withdrawal pipeline: KYT → approval → lock check → provider → on-chain.'}
@@ -275,7 +277,8 @@ function FundFlowPage() {
         </FormRow>
         <FormField label="Strategy" required><FormSelect value={wf.strategy} onChange={v=>setWf({...wf,strategy:v})}
           options={[{v:'mn-arb',l:'Market-Neutral Arb'},{v:'x-arb',l:'Cross-Exchange Arb'},{v:'prop',l:'Proprietary'}]}/></FormField>
-        {!isDeposit && <FormField label="Destination address" required hint="Must be on the investor's approved whitelist"><FormInput value={wf.address} onChange={v=>setWf({...wf,address:v})} placeholder="0x… / T… / bc1…" mono/></FormField>}
+        {!isDeposit && window.PMS_V2 && <div className="kyc-note">Destination: the client's requesting wallet. Nobody types a withdrawal destination.</div>}
+        {!isDeposit && !window.PMS_V2 && <FormField label="Destination address" required hint="Must be on the investor's approved whitelist"><FormInput value={wf.address} onChange={v=>setWf({...wf,address:v})} placeholder="0x… / T… / bc1…" mono/></FormField>}
         {!isDeposit && (
           <div className="pms-confirm-banner warn" style={{marginBottom:0}}>
             <span className="ic">⚠</span>
