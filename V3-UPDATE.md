@@ -12,6 +12,7 @@ maps every v3 change against the current code in `KemelyDApp/frontend-mono`, `ap
   - "Summary" below for the shape of the change;
   - "Per-tab changes" for the work list;
   - "Data for the new screens" for what the topics carry today and what comes later;
+  - [CONTRACT-1.13-UPDATE.md](CONTRACT-1.13-UPDATE.md) for the exact data contract (1.11.0 → 1.13.0);
   - "Appendix A" for every difference, with the design and code file:line.
 
 Code paths below are relative to `apps/pm-system/src/`. Design paths are relative to this repo.
@@ -109,6 +110,8 @@ Code paths below are relative to `apps/pm-system/src/`. Design paths are relativ
 None of these screens gets the investor level. Small design-vs-code differences are listed in Appendix A; treat them as optional.
 
 ## Data for the new screens
+
+> **Update (2026-11-06):** the backend side of M12 is built. [CONTRACT-1.13-UPDATE.md](CONTRACT-1.13-UPDATE.md) replaces the "Arrives with M12" column below with the exact topics and fields, lists what to change in pm-system before pms-backend 1.13.0 reaches your host, and covers contract 1.12.0 (live now). The table below is kept for history.
 
 pm-system keeps reading pms-backend's WebSocket topics. Today's topics already carry part of what v3 shows; the rest is being added on the backend side (milestone M12). The new field and topic names will be published in pms-backend `contracts/asyncapi.yaml`. Until a field arrives, show `—`; do not compute money figures in the browser.
 
